@@ -1,4 +1,4 @@
-module github.com/dubbogo/tools/cli
+module github.com/dubbogo/tools
 
 go 1.13
 

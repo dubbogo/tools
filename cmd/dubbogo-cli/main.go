@@ -23,8 +23,8 @@ import (
 )
 
 import (
-	"github.com/dubbogo/tools/cli/internal/client"
-	"github.com/dubbogo/tools/cli/internal/json_register"
+	"github.com/dubbogo/tools/internal/client"
+	"github.com/dubbogo/tools/internal/json_register"
 )
 
 var (

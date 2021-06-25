@@ -30,8 +30,8 @@ import (
 )
 
 import (
-	"github.com/dubbogo/tools/cli/internal/common"
-	"github.com/dubbogo/tools/cli/internal/protocol"
+	"github.com/dubbogo/tools/internal/common"
+	"github.com/dubbogo/tools/internal/protocol"
 )
 
 func init() {
