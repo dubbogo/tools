@@ -12,11 +12,12 @@ import (
 )
 
 const (
-	GO_FILE_SUFFIX = ".go"
-	GO_ROOT        = "GOROOT"
-	PATH_SEPARATOR = "/"
-	IMPORT         = "import"
-	GO_MOD         = "go.mod"
+	GO_FILE_SUFFIX  = ".go"
+	GO_ROOT         = "GOROOT"
+	ALIAS_SEPARATOR = " "
+	PATH_SEPARATOR  = "/"
+	IMPORT          = "import"
+	GO_MOD          = "go.mod"
 )
 
 var (
@@ -133,7 +134,10 @@ func reformatImports(path string) error {
 	}
 
 	for _, dir := range dirs {
-		reformatImports(path + "/" + dir.Name())
+		err := reformatImports(path + "/" + dir.Name())
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -156,9 +160,9 @@ func doReformat(filePath string) error {
 	endImport := false
 	output := make([]byte, 0)
 
-	rootImports := make([]string, 0)
-	internalImports := make([]string, 0)
-	// import prefix(orgnazation) -> import packages
+	// processed import(orgnazation) -> orignal import packages
+	rootImports := make(map[string][]string)
+	internalImports := make(map[string][]string)
 	thirdImports := make(map[string][]string)
 
 	for {
@@ -181,35 +185,24 @@ func doReformat(filePath string) error {
 			beginImports = true
 		}
 
-		// collect thirdImports
+		// collect imports
 		if beginImports && strings.Contains(lineStr, "\"") {
-			importPkg := strings.TrimSpace(lineStr)
-			orgImportPkg := importPkg
-			// TODO 处理 alias "xxx" 和 "xxx"
-			if strings.HasPrefix(importPkg, "_") {
-				importPkg = strings.TrimPrefix(importPkg, "_")
-				importPkg = strings.TrimSpace(importPkg)
-			}
-			importPkg = strings.Trim(importPkg, "\"")
-			// go root import block
-			if _, ok := goPkgMap[importPkg]; ok {
-				rootImports = append(rootImports, importPkg)
-				continue
-			}
+			orgImportPkg := strings.TrimSpace(lineStr)
+			importKey := orgImportPkg
+			// process those imports that has alias
+			importKey = unwrapImport(importKey)
 
-			//
-			if strings.HasPrefix(importPkg, projectName) {
-				internalImports = append(internalImports, importPkg)
-				continue
-			}
-
-			importsSegment := strings.Split(importPkg, "/")
-			project := strings.Join(importsSegment[:3], "/")
-			if value, ok := thirdImports[project]; ok {
-				value = append(value, orgImportPkg)
-				thirdImports[project] = value
+			if _, ok := goPkgMap[importKey]; ok {
+				// go root import block
+				cacheImports(rootImports, importKey, orgImportPkg)
+			} else if strings.HasPrefix(importKey, projectName) {
+				// internal imports of the project
+				cacheImports(internalImports, importKey, orgImportPkg)
 			} else {
-				thirdImports[project] = []string{orgImportPkg}
+				// imports of the third projects
+				importsSegment := strings.Split(importKey, "/")
+				project := strings.Join(importsSegment[:3], "/")
+				cacheImports(thirdImports, project, orgImportPkg)
 			}
 		}
 
@@ -230,12 +223,16 @@ func doReformat(filePath string) error {
 		output = append(output, []byte("\n")...)
 	}
 
-	// TODO 覆盖原来文件
-	outF, err := os.OpenFile("../test_format.go", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	outF, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
-	defer outF.Close()
+	defer func(outF *os.File) {
+		err := outF.Close()
+		if err != nil {
+
+		}
+	}(outF)
 	writer := bufio.NewWriter(outF)
 	_, err = writer.Write(output)
 	if err != nil {
@@ -246,54 +243,61 @@ func doReformat(filePath string) error {
 		return err
 	}
 	return nil
-
 }
 
-func refreshImports(content []byte, rootImports, internalImports []string, thirdImports map[string][]string) []byte {
-	if len(rootImports) > 0 {
-		content = append(content, []byte("import(\n")...)
-		content = doRefreshImports(content, wrapImports(rootImports))
-		content = append(content, []byte(")\n\n")...)
+func unwrapImport(importStr string) string {
+	if strings.Index(importStr, ALIAS_SEPARATOR) != -1 {
+		importStr = strings.Split(importStr, ALIAS_SEPARATOR)[1]
 	}
+	return strings.Trim(importStr, "\"")
+}
 
-	if len(thirdImports) > 0 {
-		content = append(content, []byte("import(\n")...)
-		thirdProjects := make([]string, 0)
-		for key := range thirdImports {
-			thirdProjects = append(thirdProjects, key)
-		}
-		sort.Strings(thirdProjects)
-		for idx, key := range thirdProjects {
-			value := thirdImports[key]
-			// TODO 兼容
-			// "xxx" 和 alias "xxx" 这两种格式的排序
-			sort.Strings(value)
-			content = doRefreshImports(content, value)
-			if idx < len(thirdProjects)-1 {
-				content = append(content, []byte("\n")...)
-			}
-		}
-		content = append(content, []byte(")\n\n")...)
+func cacheImports(m map[string][]string, key, value string) {
+	if values, ok := m[key]; ok {
+		values = append(values, value)
+		m[key] = values
+	} else {
+		m[key] = []string{value}
 	}
+}
 
-	if len(internalImports) > 0 {
-		content = append(content, []byte("import(\n")...)
-		content = doRefreshImports(content, wrapImports(internalImports))
-		content = append(content, []byte(")\n\n")...)
-	}
-
+func refreshImports(content []byte, rootImports, internalImports, thirdImports map[string][]string) []byte {
+	content = tryRefreshImports(content, rootImports, false)
+	content = tryRefreshImports(content, thirdImports, true)
+	content = tryRefreshImports(content, internalImports, false)
 	return content
 }
 
-func wrapImports(imports []string) []string {
-	for i := range imports {
-		imports[i] = "\"" + imports[i] + "\""
+func tryRefreshImports(content []byte, importsMap map[string][]string, blankLine bool) []byte {
+	if len(importsMap) <= 0 {
+		return content
 	}
-	return imports
+
+	content = append(content, []byte("import (\n")...)
+	sortedKeys := make([]string, 0, len(importsMap))
+	for key := range importsMap {
+		sortedKeys = append(sortedKeys, key)
+	}
+	sort.Strings(sortedKeys)
+
+	for idx, key := range sortedKeys {
+		value := importsMap[key]
+		content = doRefreshImports(content, value)
+		if blankLine && idx < len(sortedKeys)-1 {
+			content = append(content, []byte("\n")...)
+		}
+	}
+
+	content = append(content, []byte(")\n\n")...)
+	return content
 }
 
 func doRefreshImports(content []byte, imports []string) []byte {
-	sort.Strings(imports)
+	sort.SliceStable(imports, func(i, j int) bool {
+		v1 := unwrapImport(imports[i])
+		v2 := unwrapImport(imports[j])
+		return v1 < v2
+	})
 	for _, rImport := range imports {
 		content = append(content, []byte("\t"+rImport+"\n")...)
 	}
