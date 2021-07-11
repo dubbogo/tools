@@ -310,7 +310,7 @@ func mergeImports(m map[string][]string) map[string][]string {
 			} else if strings.HasPrefix(mergedKey, key) {
 				// mergedKey is a sub package of the module key
 				mergedValues := mergedMap[mergedKey]
-				delete(m, mergedKey)
+				delete(mergedMap, mergedKey)
 				cacheImports(mergedMap, key, append(m[key], mergedValues...))
 				merged = true
 			}
