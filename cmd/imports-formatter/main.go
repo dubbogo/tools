@@ -29,12 +29,12 @@ import (
 )
 
 const (
-	GO_FILE_SUFFIX  = ".go"
-	GO_ROOT         = "GOROOT"
-	ALIAS_SEPARATOR = " "
-	PATH_SEPARATOR  = "/"
-	IMPORT          = "import"
-	GO_MOD          = "go.mod"
+	GO_FILE_SUFFIX = ".go"
+	GO_ROOT        = "GOROOT"
+	QUOTATION_MARK = "\""
+	PATH_SEPARATOR = "/"
+	IMPORT         = "import"
+	GO_MOD         = "go.mod"
 )
 
 var (
@@ -215,7 +215,7 @@ func doReformat(filePath string) error {
 		}
 
 		// collect imports
-		if beginImports && strings.Contains(lineStr, "\"") {
+		if beginImports && strings.Contains(lineStr, QUOTATION_MARK) {
 			orgImportPkg := strings.TrimSpace(lineStr)
 			if strings.HasPrefix(orgImportPkg, "//") {
 				continue
@@ -282,10 +282,11 @@ func doReformat(filePath string) error {
 }
 
 func unwrapImport(importStr string) string {
-	if strings.Index(importStr, ALIAS_SEPARATOR) != -1 {
+	// exists alias
+	if !strings.HasPrefix(importStr, QUOTATION_MARK) {
 		importStr = strings.Fields(importStr)[1]
 	}
-	return strings.Trim(importStr, "\"")
+	return strings.Trim(importStr, QUOTATION_MARK)
 }
 
 func cacheImports(m map[string][]string, key string, values []string) {
