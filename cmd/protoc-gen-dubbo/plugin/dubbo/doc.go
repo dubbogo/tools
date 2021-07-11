@@ -15,5 +15,4 @@
  * limitations under the License.
  */
 
-// Package dubbo plugin for protobuf.
 package dubbo
