@@ -20,12 +20,15 @@ package main
 import (
 	"bufio"
 	"flag"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
+)
+
+import (
+	"github.com/pkg/errors"
 )
 
 const (
@@ -44,6 +47,7 @@ var (
 	projectRootPath   string
 	projectName       string
 	goPkgMap          = make(map[string]struct{})
+	comments          = make([]string, 0)
 )
 
 func init() {
@@ -205,6 +209,11 @@ func doReformat(filePath string) error {
 				output = refreshImports(output, mergeImports(rootImports), false)
 				output = refreshImports(output, mergeImports(thirdImports), true)
 				output = refreshImports(output, mergeImports(internalImports), false)
+				if len(comments) > 0 {
+					for _, c := range comments {
+						output = append(output, []byte(c+"\n")...)
+					}
+				}
 				break
 			}
 		}
@@ -214,14 +223,18 @@ func doReformat(filePath string) error {
 			beginImports = true
 		}
 
+		orgImportPkg := strings.TrimSpace(lineStr)
+		if strings.HasPrefix(orgImportPkg, "//") {
+			comments = append(comments, orgImportPkg)
+			continue
+		}
+
 		// collect imports
-		if beginImports && strings.Contains(lineStr, QUOTATION_MARK) {
-			orgImportPkg := strings.TrimSpace(lineStr)
-			if strings.HasPrefix(orgImportPkg, "//") {
-				continue
-			}
-			if strings.HasPrefix(orgImportPkg, "import ") {
-				orgImportPkg = strings.TrimPrefix(orgImportPkg, "import ")
+		if beginImports && strings.Contains(orgImportPkg, QUOTATION_MARK) {
+			comments = comments[:0]
+			// single line import
+			if strings.HasPrefix(orgImportPkg, IMPORT+" ") {
+				orgImportPkg = strings.TrimPrefix(orgImportPkg, IMPORT+" ")
 			}
 			importKey := orgImportPkg
 			// process those imports that has alias
