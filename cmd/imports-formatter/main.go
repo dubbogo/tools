@@ -20,7 +20,7 @@ package main
 import (
 	"bufio"
 	"flag"
-	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -56,19 +56,19 @@ func main() {
 	var err error
 	projectName, err = getProjectName(projectRootPath)
 	if err != nil {
-		fmt.Println("get project name error:", err)
+		panic(err)
 		return
 	}
 
 	err = preProcess(goRoot, goPkgMap)
 	if err != nil {
-		fmt.Println("process go src error:", err)
+		panic(err)
 		return
 	}
 
 	err = reformatImports(projectRootPath)
 	if err != nil {
-		fmt.Println("reformatImports error:", err)
+		panic(err)
 		return
 	}
 }
@@ -197,6 +197,18 @@ func doReformat(filePath string) error {
 			continue
 		}
 
+		// if imports blocks end
+		for _, block := range endBlocks {
+			if strings.HasPrefix(string(line), block) {
+				endImport = true
+				beginImports = false
+				output = refreshImports(output, mergeImports(rootImports), false)
+				output = refreshImports(output, mergeImports(thirdImports), true)
+				output = refreshImports(output, mergeImports(internalImports), false)
+				break
+			}
+		}
+
 		lineStr := string(line)
 		if strings.HasPrefix(lineStr, IMPORT) {
 			beginImports = true
@@ -205,33 +217,40 @@ func doReformat(filePath string) error {
 		// collect imports
 		if beginImports && strings.Contains(lineStr, "\"") {
 			orgImportPkg := strings.TrimSpace(lineStr)
+			if strings.HasPrefix(orgImportPkg, "//") {
+				continue
+			}
+			if strings.HasPrefix(orgImportPkg, "import ") {
+				orgImportPkg = strings.TrimPrefix(orgImportPkg, "import ")
+			}
 			importKey := orgImportPkg
 			// process those imports that has alias
 			importKey = unwrapImport(importKey)
 
 			if _, ok := goPkgMap[importKey]; ok {
 				// go root import block
-				cacheImports(rootImports, importKey, orgImportPkg)
+				cacheImports(rootImports, importKey, []string{orgImportPkg})
 			} else if strings.HasPrefix(importKey, projectName) {
 				// internal imports of the project
-				cacheImports(internalImports, importKey, orgImportPkg)
+				cacheImports(internalImports, importKey, []string{orgImportPkg})
 			} else {
 				// imports of the third projects
-				importsSegment := strings.Split(importKey, "/")
-				project := strings.Join(importsSegment[:3], "/")
-				cacheImports(thirdImports, project, orgImportPkg)
+				project, importsSegment := "", strings.Split(importKey, "/")
+
+				// like google.golang.org/grpc etc.
+				if len(importsSegment) == 2 {
+					project = strings.Join(importsSegment[:2], "/")
+				} else if len(importsSegment) > 2 {
+					project = strings.Join(importsSegment[:3], "/")
+				} else {
+					return errors.New("unexpected import format: " + orgImportPkg + " in file " + filePath)
+				}
+				cacheImports(thirdImports, project, []string{orgImportPkg})
 			}
+			continue
 		}
 
-		for _, block := range endBlocks {
-			if strings.HasPrefix(string(line), block) {
-				endImport = true
-				beginImports = false
-				output = refreshImports(output, rootImports, internalImports, thirdImports)
-				break
-			}
-		}
-
+		// to process `import (`
 		if beginImports {
 			continue
 		}
@@ -264,28 +283,47 @@ func doReformat(filePath string) error {
 
 func unwrapImport(importStr string) string {
 	if strings.Index(importStr, ALIAS_SEPARATOR) != -1 {
-		importStr = strings.Split(importStr, ALIAS_SEPARATOR)[1]
+		importStr = strings.Fields(importStr)[1]
 	}
 	return strings.Trim(importStr, "\"")
 }
 
-func cacheImports(m map[string][]string, key, value string) {
-	if values, ok := m[key]; ok {
-		values = append(values, value)
-		m[key] = values
+func cacheImports(m map[string][]string, key string, values []string) {
+	if oldValues, ok := m[key]; ok {
+		oldValues = append(oldValues, values...)
+		m[key] = oldValues
 	} else {
-		m[key] = []string{value}
+		m[key] = values
 	}
 }
 
-func refreshImports(content []byte, rootImports, internalImports, thirdImports map[string][]string) []byte {
-	content = tryRefreshImports(content, rootImports, false)
-	content = tryRefreshImports(content, thirdImports, true)
-	content = tryRefreshImports(content, internalImports, false)
-	return content
+func mergeImports(m map[string][]string) map[string][]string {
+	mergedMap := make(map[string][]string)
+	for key := range m {
+		merged := false
+		for mergedKey := range mergedMap {
+			if strings.HasPrefix(key, mergedKey) {
+				// key is a sub package of the module mergedKey
+				cacheImports(mergedMap, mergedKey, m[key])
+				merged = true
+			} else if strings.HasPrefix(mergedKey, key) {
+				// mergedKey is a sub package of the module key
+				mergedValues := mergedMap[mergedKey]
+				delete(m, mergedKey)
+				cacheImports(mergedMap, key, append(m[key], mergedValues...))
+				merged = true
+			}
+		}
+		if merged {
+			continue
+		}
+		cacheImports(mergedMap, key, m[key])
+	}
+
+	return mergedMap
 }
 
-func tryRefreshImports(content []byte, importsMap map[string][]string, blankLine bool) []byte {
+func refreshImports(content []byte, importsMap map[string][]string, blankLine bool) []byte {
 	if len(importsMap) <= 0 {
 		return content
 	}
