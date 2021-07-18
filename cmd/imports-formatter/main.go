@@ -41,6 +41,7 @@ const (
 )
 
 var (
+	blankLine         bool
 	currentWorkDir, _ = os.Getwd()
 	goRoot            = os.Getenv(GO_ROOT) + "/src"
 	endBlocks         = []string{"var", "const", "type", "func"}
@@ -55,6 +56,7 @@ var (
 func init() {
 	flag.StringVar(&projectRootPath, "path", currentWorkDir, "the path need to be reformatted")
 	flag.StringVar(&projectName, "module", "", "project name, namely module name in the go.mod")
+	flag.BoolVar(&blankLine, "bl", false, "if true, it will split diferent import modules with a blank line")
 }
 
 func main() {
@@ -216,7 +218,7 @@ func doReformat(filePath string) error {
 				endImport = true
 				beginImports = false
 				output = refreshImports(output, mergeImports(rootImports), false)
-				output = refreshImports(output, mergeImports(thirdImports), true)
+				output = refreshImports(output, mergeImports(thirdImports), blankLine)
 				output = refreshImports(output, mergeImports(internalImports), false)
 				if len(innerComments) > 0 {
 					for _, c := range innerComments {
@@ -321,7 +323,7 @@ func doReformat(filePath string) error {
 
 	if !endImport {
 		output = refreshImports(output, mergeImports(rootImports), false)
-		output = refreshImports(output, mergeImports(thirdImports), true)
+		output = refreshImports(output, mergeImports(thirdImports), blankLine)
 		output = refreshImports(output, mergeImports(internalImports), false)
 		if len(innerComments) > 0 {
 			for _, c := range innerComments {
