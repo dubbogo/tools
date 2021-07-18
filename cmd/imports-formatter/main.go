@@ -47,7 +47,9 @@ var (
 	projectRootPath   string
 	projectName       string
 	goPkgMap          = make(map[string]struct{})
-	comments          = make([]string, 0)
+	outerComments     = make([]string, 0)
+	// 记录 importBlocks 和 endBlocks 之间的注释
+	innerComments = make([]string, 0)
 )
 
 func init() {
@@ -187,6 +189,13 @@ func doReformat(filePath string) error {
 	thirdImports := make(map[string][]string)
 
 	for {
+		if len(outerComments) > 0 {
+			for _, c := range outerComments {
+				output = append(output, []byte(c+"\n")...)
+			}
+			outerComments = make([]string, 0)
+		}
+
 		line, _, err := reader.ReadLine()
 		if err != nil {
 			if err == io.EOF {
@@ -209,8 +218,8 @@ func doReformat(filePath string) error {
 				output = refreshImports(output, mergeImports(rootImports), false)
 				output = refreshImports(output, mergeImports(thirdImports), true)
 				output = refreshImports(output, mergeImports(internalImports), false)
-				if len(comments) > 0 {
-					for _, c := range comments {
+				if len(innerComments) > 0 {
+					for _, c := range innerComments {
 						output = append(output, []byte(c+"\n")...)
 					}
 				}
@@ -224,14 +233,52 @@ func doReformat(filePath string) error {
 		}
 
 		orgImportPkg := strings.TrimSpace(lineStr)
+		// single line comment
 		if strings.HasPrefix(orgImportPkg, "//") {
-			comments = append(comments, orgImportPkg)
+			if beginImports {
+				innerComments = append(innerComments, lineStr)
+			} else {
+				outerComments = append(outerComments, lineStr)
+			}
+			continue
+		}
+		// multiple lines comment
+		if strings.HasPrefix(orgImportPkg, "/*") {
+			if beginImports {
+				innerComments = append(innerComments, lineStr)
+				commentLine, _, err := reader.ReadLine()
+				commentLineStr := string(commentLine)
+				for err == nil && !strings.HasSuffix(strings.TrimSpace(commentLineStr), "*/") {
+					innerComments = append(innerComments, commentLineStr)
+					commentLine, _, err = reader.ReadLine()
+					commentLineStr = string(commentLine)
+				}
+				if err == nil {
+					innerComments = append(innerComments, commentLineStr)
+				} else {
+					return err
+				}
+			} else {
+				outerComments = append(outerComments, lineStr)
+				commentLine, _, err := reader.ReadLine()
+				commentLineStr := string(commentLine)
+				for err == nil && !strings.HasSuffix(strings.TrimSpace(commentLineStr), "*/") {
+					outerComments = append(outerComments, commentLineStr)
+					commentLine, _, err = reader.ReadLine()
+					commentLineStr = string(commentLine)
+				}
+				if err == nil {
+					outerComments = append(outerComments, commentLineStr)
+				} else {
+					return err
+				}
+			}
 			continue
 		}
 
 		// collect imports
 		if beginImports && strings.Contains(orgImportPkg, QUOTATION_MARK) {
-			comments = comments[:0]
+			innerComments = innerComments[:0]
 			// single line import
 			if strings.HasPrefix(orgImportPkg, IMPORT+" ") {
 				orgImportPkg = strings.TrimPrefix(orgImportPkg, IMPORT+" ")
@@ -270,6 +317,17 @@ func doReformat(filePath string) error {
 
 		output = append(output, line...)
 		output = append(output, []byte("\n")...)
+	}
+
+	if !endImport {
+		output = refreshImports(output, mergeImports(rootImports), false)
+		output = refreshImports(output, mergeImports(thirdImports), true)
+		output = refreshImports(output, mergeImports(internalImports), false)
+		if len(innerComments) > 0 {
+			for _, c := range innerComments {
+				output = append(output, []byte(c+"\n")...)
+			}
+		}
 	}
 
 	outF, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
