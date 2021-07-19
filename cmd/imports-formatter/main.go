@@ -151,6 +151,7 @@ func reformatImports(path string) error {
 		if fileInfo.IsDir() {
 			dirs = append(dirs, fileInfo)
 		} else if strings.HasSuffix(fileInfo.Name(), GO_FILE_SUFFIX) {
+			clearData()
 			err = doReformat(path + PATH_SEPARATOR + fileInfo.Name())
 			if err != nil {
 				return err
@@ -212,7 +213,7 @@ func doReformat(filePath string) error {
 			continue
 		}
 
-		// if imports blocks end
+		// if import blocks end
 		for _, block := range endBlocks {
 			if strings.HasPrefix(string(line), block) {
 				endImport = true
@@ -374,24 +375,39 @@ func cacheImports(m map[string][]string, key string, values []string) {
 func mergeImports(m map[string][]string) map[string][]string {
 	mergedMap := make(map[string][]string)
 	for key := range m {
-		merged := false
-		for mergedKey := range mergedMap {
-			if strings.HasPrefix(key, mergedKey) {
-				// key is a sub package of the module mergedKey
-				cacheImports(mergedMap, mergedKey, m[key])
-				merged = true
-			} else if strings.HasPrefix(mergedKey, key) {
-				// mergedKey is a sub package of the module key
-				mergedValues := mergedMap[mergedKey]
-				delete(mergedMap, mergedKey)
-				cacheImports(mergedMap, key, append(m[key], mergedValues...))
-				merged = true
+		mergedKeys := make([]string, len(m))
+		newMergedMap := make(map[string][]string)
+		mergedValues := make([]string, 0)
+		mergedValues = append(mergedValues, m[key]...)
+		rootKey := key
+
+		for mKey := range mergedMap {
+			if strings.HasPrefix(rootKey, mKey) {
+				rootKey = mKey
+			}
+			if strings.HasPrefix(key, mKey) || strings.HasPrefix(mKey, key) {
+				// mKey is a sub package of the module key || key is a sub package of the module mKey
+				mergedKeys = append(mergedKeys, mKey)
 			}
 		}
-		if merged {
-			continue
+
+		for mKey, value := range mergedMap {
+			target := false
+			for _, mKey1 := range mergedKeys {
+				if mKey == mKey1 {
+					target = true
+					mergedValues = append(mergedValues, mergedMap[mKey]...)
+					break
+				}
+			}
+
+			if !target {
+				cacheImports(newMergedMap, mKey, value)
+			}
 		}
-		cacheImports(mergedMap, key, m[key])
+
+		cacheImports(newMergedMap, rootKey, mergedValues)
+		mergedMap = newMergedMap
 	}
 
 	return mergedMap
@@ -431,4 +447,9 @@ func doRefreshImports(content []byte, imports []string) []byte {
 		content = append(content, []byte("\t"+rImport+"\n")...)
 	}
 	return content
+}
+
+func clearData() {
+	innerComments = innerComments[:0]
+	outerComments = outerComments[:0]
 }
