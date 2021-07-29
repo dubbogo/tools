@@ -41,18 +41,22 @@ const (
 )
 
 var (
+	blankLine         bool
 	currentWorkDir, _ = os.Getwd()
 	goRoot            = os.Getenv(GO_ROOT) + "/src"
 	endBlocks         = []string{"var", "const", "type", "func"}
 	projectRootPath   string
 	projectName       string
 	goPkgMap          = make(map[string]struct{})
-	comments          = make([]string, 0)
+	outerComments     = make([]string, 0)
+	// 记录 importBlocks 和 endBlocks 之间的注释
+	innerComments = make([]string, 0)
 )
 
 func init() {
 	flag.StringVar(&projectRootPath, "path", currentWorkDir, "the path need to be reformatted")
 	flag.StringVar(&projectName, "module", "", "project name, namely module name in the go.mod")
+	flag.BoolVar(&blankLine, "bl", false, "if true, it will split diferent import modules with a blank line")
 }
 
 func main() {
@@ -147,6 +151,7 @@ func reformatImports(path string) error {
 		if fileInfo.IsDir() {
 			dirs = append(dirs, fileInfo)
 		} else if strings.HasSuffix(fileInfo.Name(), GO_FILE_SUFFIX) {
+			clearData()
 			err = doReformat(path + PATH_SEPARATOR + fileInfo.Name())
 			if err != nil {
 				return err
@@ -187,6 +192,13 @@ func doReformat(filePath string) error {
 	thirdImports := make(map[string][]string)
 
 	for {
+		if len(outerComments) > 0 {
+			for _, c := range outerComments {
+				output = append(output, []byte(c+"\n")...)
+			}
+			outerComments = make([]string, 0)
+		}
+
 		line, _, err := reader.ReadLine()
 		if err != nil {
 			if err == io.EOF {
@@ -201,16 +213,16 @@ func doReformat(filePath string) error {
 			continue
 		}
 
-		// if imports blocks end
+		// if import blocks end
 		for _, block := range endBlocks {
 			if strings.HasPrefix(string(line), block) {
 				endImport = true
 				beginImports = false
 				output = refreshImports(output, mergeImports(rootImports), false)
-				output = refreshImports(output, mergeImports(thirdImports), true)
+				output = refreshImports(output, mergeImports(thirdImports), blankLine)
 				output = refreshImports(output, mergeImports(internalImports), false)
-				if len(comments) > 0 {
-					for _, c := range comments {
+				if len(innerComments) > 0 {
+					for _, c := range innerComments {
 						output = append(output, []byte(c+"\n")...)
 					}
 				}
@@ -224,14 +236,52 @@ func doReformat(filePath string) error {
 		}
 
 		orgImportPkg := strings.TrimSpace(lineStr)
+		// single line comment
 		if strings.HasPrefix(orgImportPkg, "//") {
-			comments = append(comments, orgImportPkg)
+			if beginImports {
+				innerComments = append(innerComments, lineStr)
+			} else {
+				outerComments = append(outerComments, lineStr)
+			}
+			continue
+		}
+		// multiple lines comment
+		if strings.HasPrefix(orgImportPkg, "/*") {
+			if beginImports {
+				innerComments = append(innerComments, lineStr)
+				commentLine, _, err := reader.ReadLine()
+				commentLineStr := string(commentLine)
+				for err == nil && !strings.HasSuffix(strings.TrimSpace(commentLineStr), "*/") {
+					innerComments = append(innerComments, commentLineStr)
+					commentLine, _, err = reader.ReadLine()
+					commentLineStr = string(commentLine)
+				}
+				if err == nil {
+					innerComments = append(innerComments, commentLineStr)
+				} else {
+					return err
+				}
+			} else {
+				outerComments = append(outerComments, lineStr)
+				commentLine, _, err := reader.ReadLine()
+				commentLineStr := string(commentLine)
+				for err == nil && !strings.HasSuffix(strings.TrimSpace(commentLineStr), "*/") {
+					outerComments = append(outerComments, commentLineStr)
+					commentLine, _, err = reader.ReadLine()
+					commentLineStr = string(commentLine)
+				}
+				if err == nil {
+					outerComments = append(outerComments, commentLineStr)
+				} else {
+					return err
+				}
+			}
 			continue
 		}
 
 		// collect imports
 		if beginImports && strings.Contains(orgImportPkg, QUOTATION_MARK) {
-			comments = comments[:0]
+			innerComments = innerComments[:0]
 			// single line import
 			if strings.HasPrefix(orgImportPkg, IMPORT+" ") {
 				orgImportPkg = strings.TrimPrefix(orgImportPkg, IMPORT+" ")
@@ -270,6 +320,17 @@ func doReformat(filePath string) error {
 
 		output = append(output, line...)
 		output = append(output, []byte("\n")...)
+	}
+
+	if !endImport {
+		output = refreshImports(output, mergeImports(rootImports), false)
+		output = refreshImports(output, mergeImports(thirdImports), blankLine)
+		output = refreshImports(output, mergeImports(internalImports), false)
+		if len(innerComments) > 0 {
+			for _, c := range innerComments {
+				output = append(output, []byte(c+"\n")...)
+			}
+		}
 	}
 
 	outF, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
@@ -314,24 +375,39 @@ func cacheImports(m map[string][]string, key string, values []string) {
 func mergeImports(m map[string][]string) map[string][]string {
 	mergedMap := make(map[string][]string)
 	for key := range m {
-		merged := false
-		for mergedKey := range mergedMap {
-			if strings.HasPrefix(key, mergedKey) {
-				// key is a sub package of the module mergedKey
-				cacheImports(mergedMap, mergedKey, m[key])
-				merged = true
-			} else if strings.HasPrefix(mergedKey, key) {
-				// mergedKey is a sub package of the module key
-				mergedValues := mergedMap[mergedKey]
-				delete(mergedMap, mergedKey)
-				cacheImports(mergedMap, key, append(m[key], mergedValues...))
-				merged = true
+		mergedKeys := make([]string, len(m))
+		newMergedMap := make(map[string][]string)
+		mergedValues := make([]string, 0)
+		mergedValues = append(mergedValues, m[key]...)
+		rootKey := key
+
+		for mKey := range mergedMap {
+			if strings.HasPrefix(rootKey, mKey) {
+				rootKey = mKey
+			}
+			if strings.HasPrefix(key, mKey) || strings.HasPrefix(mKey, key) {
+				// mKey is a sub package of the module key || key is a sub package of the module mKey
+				mergedKeys = append(mergedKeys, mKey)
 			}
 		}
-		if merged {
-			continue
+
+		for mKey, value := range mergedMap {
+			target := false
+			for _, mKey1 := range mergedKeys {
+				if mKey == mKey1 {
+					target = true
+					mergedValues = append(mergedValues, mergedMap[mKey]...)
+					break
+				}
+			}
+
+			if !target {
+				cacheImports(newMergedMap, mKey, value)
+			}
 		}
-		cacheImports(mergedMap, key, m[key])
+
+		cacheImports(newMergedMap, rootKey, mergedValues)
+		mergedMap = newMergedMap
 	}
 
 	return mergedMap
@@ -371,4 +447,9 @@ func doRefreshImports(content []byte, imports []string) []byte {
 		content = append(content, []byte("\t"+rImport+"\n")...)
 	}
 	return content
+}
+
+func clearData() {
+	innerComments = innerComments[:0]
+	outerComments = outerComments[:0]
 }
