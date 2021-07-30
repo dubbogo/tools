@@ -56,7 +56,7 @@ var (
 func init() {
 	flag.StringVar(&projectRootPath, "path", currentWorkDir, "the path need to be reformatted")
 	flag.StringVar(&projectName, "module", "", "project name, namely module name in the go.mod")
-	flag.BoolVar(&blankLine, "bl", false, "if true, it will split diferent import modules with a blank line")
+	flag.BoolVar(&blankLine, "bl", true, "if true, it will split different import modules with a blank line")
 }
 
 func main() {

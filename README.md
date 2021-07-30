@@ -66,6 +66,6 @@ now we explain the usage of this tool with above command:
 
 - path: the directory that you want to format imports, the default value is current work directory.
 - module: the go module name, you can find it in go.mod of the project. if not set, it will find go.mod in `path` that you set. 
-- bl: in second import block, we may have many third party modules, if bl is true, the tool will split these modules with a blank line. The default value is false.
+- bl: in second import block, we may have many third party modules, if bl is true, the tool will split these modules with a blank line. The default value is true.
 
 so you can simplified the above command to `imports-formatter -path . -module github.com/dubbogo/tools`, and if you execute this command in the project root path, you can even ignore remaining 2 parameter, only need to type `imports-formatter` on your screen.
