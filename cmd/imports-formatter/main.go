@@ -118,7 +118,7 @@ func getProjectName(path string) (string, error) {
 func preProcess(path string, goPkgMap map[string]struct{}) error {
 	fileInfos, err := ioutil.ReadDir(path)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	dirs := make([]os.FileInfo, 0)
@@ -133,7 +133,7 @@ func preProcess(path string, goPkgMap map[string]struct{}) error {
 	for _, dir := range dirs {
 		err := preProcess(path+PATH_SEPARATOR+dir.Name(), goPkgMap)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
@@ -143,7 +143,7 @@ func preProcess(path string, goPkgMap map[string]struct{}) error {
 func reformatImports(path string) error {
 	fileInfos, err := ioutil.ReadDir(path)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	dirs := make([]os.FileInfo, 0)
@@ -154,7 +154,7 @@ func reformatImports(path string) error {
 			clearData()
 			err = doReformat(path + PATH_SEPARATOR + fileInfo.Name())
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		}
 	}
@@ -162,7 +162,7 @@ func reformatImports(path string) error {
 	for _, dir := range dirs {
 		err := reformatImports(path + "/" + dir.Name())
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
@@ -174,11 +174,11 @@ func doReformat(filePath string) error {
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
-
+			panic(errors.New(filePath + "encounter error:" + err.Error()))
 		}
 	}(f)
 	if err != nil {
-		return err
+		return errors.New("open " + filePath + " encounter error:" + err.Error())
 	}
 
 	reader := bufio.NewReader(f)
@@ -204,7 +204,7 @@ func doReformat(filePath string) error {
 			if err == io.EOF {
 				break
 			}
-			return err
+			return errors.New("read line of " + filePath + " encounter error:" + err.Error())
 		}
 
 		if endImport {
@@ -237,7 +237,7 @@ func doReformat(filePath string) error {
 
 		orgImportPkg := strings.TrimSpace(lineStr)
 		// single line comment
-		if strings.HasPrefix(orgImportPkg, "//") {
+		if strings.HasPrefix(orgImportPkg, "//") || (strings.HasPrefix(orgImportPkg, "/*") && strings.HasSuffix(orgImportPkg, "*/")) {
 			if beginImports {
 				innerComments = append(innerComments, lineStr)
 			} else {
@@ -259,7 +259,7 @@ func doReformat(filePath string) error {
 				if err == nil {
 					innerComments = append(innerComments, commentLineStr)
 				} else {
-					return err
+					return errors.New("read line of " + filePath + " encounter error:" + err.Error())
 				}
 			} else {
 				outerComments = append(outerComments, lineStr)
@@ -273,7 +273,7 @@ func doReformat(filePath string) error {
 				if err == nil {
 					outerComments = append(outerComments, commentLineStr)
 				} else {
-					return err
+					return errors.New("read line of " + filePath + " encounter error:" + err.Error())
 				}
 			}
 			continue
@@ -335,7 +335,7 @@ func doReformat(filePath string) error {
 
 	outF, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
-		return err
+		return errors.New("open/create" + filePath + " encounter error:" + err.Error())
 	}
 	defer func(outF *os.File) {
 		err := outF.Close()
@@ -346,11 +346,11 @@ func doReformat(filePath string) error {
 	writer := bufio.NewWriter(outF)
 	_, err = writer.Write(output)
 	if err != nil {
-		return err
+		return errors.New("write " + filePath + " encounter error:" + err.Error())
 	}
 	err = writer.Flush()
 	if err != nil {
-		return err
+		return errors.New("flush " + filePath + " encounter error:" + err.Error())
 	}
 	return nil
 }
