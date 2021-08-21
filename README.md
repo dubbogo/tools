@@ -10,7 +10,16 @@ The tool should support dubbo protocol. It makes it easy for you to define your 
 
 `go get -u github.com/dubbogo/tools/cmd/dubbogo-cli`
 
-### 3. Quick start：[example](example/README.md)
+### 3. How to get dubbo
+`go get -u github.com/dubbogo/tools/cmd/protoc-gen-dubbo`
+
+### 4. How to get dubbo
+`go get -u github.com/dubbogo/tools/cmd/protoc-gen-dubbo3`
+
+### 5. How to get imports-formatter
+`go get -u github.com/dubbogo/tools/cmd/imports-formatter`
+
+### 6. Quick start：[example](example/README.md)
 
 # imports-formatter
 
@@ -18,7 +27,7 @@ The tool should support dubbo protocol. It makes it easy for you to define your 
 
 For simplifying imports, we provider a tool named imports-formatter.it is a tool that help you format the imports of the project. it is easy to use with several commandline arguments.
 
-### 2. How to get cli-tool
+### 2. How to get imports-formatter
 
 `go get -u github.com/dubbogo/tools/cmd/imports-formatter`
 
