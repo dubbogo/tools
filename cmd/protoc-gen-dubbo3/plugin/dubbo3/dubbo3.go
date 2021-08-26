@@ -309,7 +309,7 @@ func (g *dubboGrpc) generateClientSignature(servName string, method *pb.MethodDe
 		respName = servName + "_" + generator.CamelCase(origMethName) + "Client"
 		return fmt.Sprintf("%s func(ctx %s.Context%s) (%s, error)", methName, contextPkg, reqArg, respName)
 	}
-	return fmt.Sprintf("%s func(ctx %s.Context%s, %s) error", methName, contextPkg, reqArg, respName)
+	return fmt.Sprintf("%s func(ctx %s.Context%s) (*%s, error)", methName, contextPkg, reqArg, g.typeName(method.GetOutputType()))
 }
 
 func (g *dubboGrpc) generateClientMethod(servName, fullServName, serviceDescVar string, method *pb.MethodDescriptorProto, descExpr string) {
