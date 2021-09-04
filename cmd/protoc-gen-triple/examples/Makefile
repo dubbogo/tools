@@ -13,7 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-grpc-gen:
-	protoc -I ./ helloworld.proto --go_out=plugins=grpc:.
-dubbo3-gen:
-	protoc -I ./ helloworld.proto  --dubbo3_out=plugins=grpc+dubbo:.
+triple-gen:
+	protoc -I ./ helloworld.proto  --triple_out=plugins=triple:.
