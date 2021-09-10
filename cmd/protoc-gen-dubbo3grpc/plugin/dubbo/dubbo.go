@@ -47,7 +47,7 @@ type dubboGrpc struct {
 
 // Name returns the name of this plugin, "grpc".
 func (g *dubboGrpc) Name() string {
-	return "dubbo"
+	return "dubbo3grpc"
 }
 
 // The names for packages imported in the generated code.
@@ -147,15 +147,6 @@ func (g *dubboGrpc) generateService(file *generator.FileDescriptor, service *pb.
 		g.P(deprecationComment)
 	}
 
-	// add Reference method
-	//func (u *GrpcGreeterImpl) Reference() string {
-	//	return "GrpcGreeterImpl"
-	//}
-	g.P("func (c *", dubboSrvName, ") ", " Reference() string ", "{")
-	g.P(`return "`, unexport(servName), `Impl"`)
-	g.P("}")
-	g.P()
-
 	// add GetDubboStub method
 	// func (u *GrpcGreeterImpl) GetDubboStub(cc *grpc.ClientConn) GreeterClient {
 	//	return NewGreeterClient(cc)
@@ -196,12 +187,6 @@ type DubboGrpcService interface {
 	// return get method
 	g.P("func (s *", serverType, ") GetProxyImpl() protocol.Invoker {")
 	g.P(`return s.proxyImpl`)
-	g.P("}")
-	g.P()
-
-	// return reference
-	g.P("func (c *", serverType, ") ", " Reference() string ", "{")
-	g.P(`return "`, unexport(servName), `Impl"`)
 	g.P("}")
 	g.P()
 
@@ -263,11 +248,11 @@ func (g *dubboGrpc) generateClientSignature(servName string, method *pb.MethodDe
 	if method.GetClientStreaming() {
 		reqArg = ""
 	}
-	respName := "out *" + g.typeName(method.GetOutputType())
 	if method.GetServerStreaming() || method.GetClientStreaming() {
-		respName = servName + "_" + generator.CamelCase(origMethName) + "Client"
+		respName := servName + "_" + generator.CamelCase(origMethName) + "Client"
+		return fmt.Sprintf("%s func(ctx %s.Context%s) (%s, error)", methName, contextPkg, reqArg, respName)
 	}
-	return fmt.Sprintf("%s func(ctx %s.Context%s) (%s, error)", methName, contextPkg, reqArg, respName)
+	return fmt.Sprintf("%s func(ctx %s.Context%s) (%s, error)", methName, contextPkg, reqArg, g.typeName(method.GetOutputType()))
 }
 
 //func (g *dubboGrpc) generateClientMethod(servName, fullServName, serviceDescVar string, method *pb.MethodDescriptorProto, descExpr string) {
