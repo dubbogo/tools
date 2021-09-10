@@ -226,15 +226,6 @@ func (g *triple) generateService(file *generator.FileDescriptor, service *pb.Ser
 		g.generateClientMethod(servName, fullServName, serviceDescVar, method, descExpr)
 	}
 
-	// add Reference method
-	//func (u *GrpcGreeterImpl) Reference() string {
-	//	return "GrpcGreeterImpl"
-	//}
-	g.P("func (c *", dubboSrvName, ") ", " Reference() string ", "{")
-	g.P(`return "`, unexport(servName), `Impl"`)
-	g.P("}")
-	g.P()
-
 	// add GetDubboStub method
 	// func (u *GrpcGreeterImpl) GetDubboStub(cc *dubbo3.TripleConn) GreeterClient {
 	//	return NewGreeterClient(cc)
@@ -281,12 +272,6 @@ func (g *triple) generateService(file *generator.FileDescriptor, service *pb.Ser
 	// return get method
 	g.P("func (s *", tripleServerBaseType, ") GetProxyImpl() protocol.Invoker {")
 	g.P(`return s.proxyImpl`)
-	g.P("}")
-	g.P()
-
-	// return reference
-	g.P("func (c *", tripleServerBaseType, ") ", " Reference() string ", "{")
-	g.P(`return "`, unexport(servName), `Impl"`)
 	g.P("}")
 	g.P()
 
@@ -367,9 +352,8 @@ func (g *triple) generateClientSignature(servName string, method *pb.MethodDescr
 	if method.GetClientStreaming() {
 		reqArg = ""
 	}
-	respName := "out *" + g.typeName(method.GetOutputType())
 	if method.GetServerStreaming() || method.GetClientStreaming() {
-		respName = servName + "_" + generator.CamelCase(origMethName) + "Client"
+		respName := servName + "_" + generator.CamelCase(origMethName) + "Client"
 		return fmt.Sprintf("%s func(ctx %s.Context%s) (%s, error)", methName, contextPkg, reqArg, respName)
 	}
 	return fmt.Sprintf("%s func(ctx %s.Context%s) (*%s, error)", methName, contextPkg, reqArg, g.typeName(method.GetOutputType()))
