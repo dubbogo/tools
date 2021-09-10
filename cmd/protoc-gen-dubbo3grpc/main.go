@@ -29,7 +29,7 @@ import (
 )
 
 import (
-	_ "github.com/dubbogo/tools/cmd/protoc-gen-dubbo/plugin/dubbo"
+	_ "github.com/dubbogo/tools/cmd/protoc-gen-dubbo3grpc/plugin/dubbo"
 )
 
 func main() {
