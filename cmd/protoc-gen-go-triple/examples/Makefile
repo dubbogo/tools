@@ -13,5 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# you should install protoc, protoc-gen-go, protoc-gen-go-triple first
 triple-gen:
-	protoc -I ./ helloworld.proto  --triple_out=plugins=triple:.
+	protoc --go_out=. --go-triple_out=. helloworld.proto
