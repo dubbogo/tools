@@ -234,7 +234,7 @@ func generateTripleService(gen *protogen.Plugin, file *protogen.File, g *protoge
 	serviceDescVar := service.GoName + "_ServiceDesc"
 
 	// return service desc
-	g.P("func (s *Unimplemented", serverType, ") XXX_ServiceDesc() *grpc.ServiceDesc {")
+	g.P("func (s *Unimplemented", serverType, ") XXX_ServiceDesc() *grpc_go.ServiceDesc {")
 	g.P(`return &`, serviceDescVar)
 	g.P(`}`)
 
