@@ -34,9 +34,9 @@ var RequireUnimplemented *bool
 const (
 	Version           = "1.0.1"
 	contextPackage    = protogen.GoImportPath("context")
-	grpcPackage       = protogen.GoImportPath("github.com/dubbogo/triple/pkg/grpc")
-	codesPackage      = protogen.GoImportPath("github.com/dubbogo/triple/pkg/grpc/codes")
-	statusPackage     = protogen.GoImportPath("github.com/dubbogo/triple/pkg/grpc/status")
+	grpcPackage       = protogen.GoImportPath("github.com/dubbogo/grpc-go")
+	codesPackage      = protogen.GoImportPath("github.com/dubbogo/grpc-go/codes")
+	statusPackage     = protogen.GoImportPath("github.com/dubbogo/grpc-go/status")
 	dubbo3Package     = protogen.GoImportPath("dubbo.apache.org/dubbo-go/v3/protocol/dubbo3")
 	constantPackage   = protogen.GoImportPath("github.com/dubbogo/triple/pkg/common/constant")
 	commonPackage     = protogen.GoImportPath("github.com/dubbogo/triple/pkg/common")
