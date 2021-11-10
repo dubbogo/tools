@@ -32,11 +32,11 @@ import (
 var RequireUnimplemented *bool
 
 const (
-	Version           = "1.0.0"
+	Version           = "1.0.1"
 	contextPackage    = protogen.GoImportPath("context")
-	grpcPackage       = protogen.GoImportPath("google.golang.org/grpc")
-	codesPackage      = protogen.GoImportPath("google.golang.org/grpc/codes")
-	statusPackage     = protogen.GoImportPath("google.golang.org/grpc/status")
+	grpcPackage       = protogen.GoImportPath("github.com/dubbogo/grpc-go")
+	codesPackage      = protogen.GoImportPath("github.com/dubbogo/grpc-go/codes")
+	statusPackage     = protogen.GoImportPath("github.com/dubbogo/grpc-go/status")
 	dubbo3Package     = protogen.GoImportPath("dubbo.apache.org/dubbo-go/v3/protocol/dubbo3")
 	constantPackage   = protogen.GoImportPath("github.com/dubbogo/triple/pkg/common/constant")
 	commonPackage     = protogen.GoImportPath("github.com/dubbogo/triple/pkg/common")
@@ -234,7 +234,7 @@ func generateTripleService(gen *protogen.Plugin, file *protogen.File, g *protoge
 	serviceDescVar := service.GoName + "_ServiceDesc"
 
 	// return service desc
-	g.P("func (s *Unimplemented", serverType, ") XXX_ServiceDesc() *grpc.ServiceDesc {")
+	g.P("func (s *Unimplemented", serverType, ") XXX_ServiceDesc() *grpc_go.ServiceDesc {")
 	g.P(`return &`, serviceDescVar)
 	g.P(`}`)
 
