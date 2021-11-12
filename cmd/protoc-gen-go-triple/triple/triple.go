@@ -32,11 +32,12 @@ import (
 var RequireUnimplemented *bool
 
 const (
-	Version           = "1.0.1"
+	Version           = "1.0.2"
 	contextPackage    = protogen.GoImportPath("context")
 	grpcPackage       = protogen.GoImportPath("github.com/dubbogo/grpc-go")
 	codesPackage      = protogen.GoImportPath("github.com/dubbogo/grpc-go/codes")
 	statusPackage     = protogen.GoImportPath("github.com/dubbogo/grpc-go/status")
+	metadataPackage   = protogen.GoImportPath("github.com/dubbogo/grpc-go/metadata")
 	dubbo3Package     = protogen.GoImportPath("dubbo.apache.org/dubbo-go/v3/protocol/dubbo3")
 	constantPackage   = protogen.GoImportPath("github.com/dubbogo/triple/pkg/common/constant")
 	commonPackage     = protogen.GoImportPath("github.com/dubbogo/triple/pkg/common")
@@ -450,7 +451,12 @@ func generateTripleServerMethod(gen *protogen.Plugin, file *protogen.File, g *pr
 		g.P("base := srv.(", dubbo3Package.Ident("Dubbo3GrpcService"), ")")
 		g.P("args := []interface{}{}")
 		g.P("args = append(args, in)")
-		g.P(`invo := `, invocationPackage.Ident("NewRPCInvocation"), `("`, method.GoName, `", args, nil)`)
+		g.P("md, _ := ", metadataPackage.Ident("FromIncomingContext"), "(ctx)")
+		g.P("invAttachment := make(map[string]interface{}, len(md))")
+		g.P(`for k, v := range md{
+invAttachment[k] = v
+}`)
+		g.P(`invo := `, invocationPackage.Ident("NewRPCInvocation"), `("`, method.GoName, `", args, invAttachment)`)
 		g.P("if interceptor == nil {")
 		g.P("result := base.XXX_GetProxyImpl().Invoke(ctx, invo)")
 		g.P("return result, result.Error()")
