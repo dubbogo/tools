@@ -26,13 +26,9 @@ import (
 import (
 	"dubbo.apache.org/dubbo-go/v3/common"
 	"dubbo.apache.org/dubbo-go/v3/protocol/invocation"
-
-	"github.com/stretchr/testify/assert"
-)
-
-import (
 	"github.com/dubbogo/tools/cmd/grpc/internal/helloworld"
 	"github.com/dubbogo/tools/cmd/grpc/internal/routeguide"
+	"github.com/stretchr/testify/assert"
 )
 
 const (

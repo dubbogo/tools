@@ -23,7 +23,6 @@ import (
 
 import (
 	"dubbo.apache.org/dubbo-go/v3/config"
-
 	"google.golang.org/grpc"
 )
 
