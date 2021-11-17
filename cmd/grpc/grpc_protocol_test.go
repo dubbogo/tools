@@ -18,19 +18,16 @@
 package grpc
 
 import (
-	"github.com/dubbogo/tools/cmd/grpc/internal/helloworld"
 	"testing"
 	"time"
-)
-
-import (
-	"github.com/stretchr/testify/assert"
 )
 
 import (
 	"dubbo.apache.org/dubbo-go/v3/common"
 	"dubbo.apache.org/dubbo-go/v3/config"
 	"dubbo.apache.org/dubbo-go/v3/protocol"
+	"github.com/dubbogo/tools/cmd/grpc/internal/helloworld"
+	"github.com/stretchr/testify/assert"
 )
 
 func doInitProvider() {

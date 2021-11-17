@@ -24,17 +24,12 @@ import (
 )
 
 import (
-	hessian2 "github.com/apache/dubbo-go-hessian2"
-
-	"github.com/pkg/errors"
-
-	"google.golang.org/grpc/connectivity"
-)
-
-import (
 	"dubbo.apache.org/dubbo-go/v3/common"
 	"dubbo.apache.org/dubbo-go/v3/common/logger"
 	"dubbo.apache.org/dubbo-go/v3/protocol"
+	hessian2 "github.com/apache/dubbo-go-hessian2"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/connectivity"
 )
 
 var errNoReply = errors.New("request need @response")

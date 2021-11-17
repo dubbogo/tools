@@ -19,17 +19,14 @@ package grpc
 
 import (
 	"context"
-	"github.com/dubbogo/tools/cmd/grpc/internal/helloworld"
-	"github.com/dubbogo/tools/cmd/grpc/internal/routeguide"
 	"testing"
 )
 
 import (
-	"github.com/stretchr/testify/assert"
-)
-
-import (
 	"dubbo.apache.org/dubbo-go/v3/common"
+	"github.com/dubbogo/tools/cmd/grpc/internal/helloworld"
+	"github.com/dubbogo/tools/cmd/grpc/internal/routeguide"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnaryClient(t *testing.T) {

@@ -25,20 +25,14 @@ import (
 )
 
 import (
-	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-
-	"github.com/opentracing/opentracing-go"
-
-	"google.golang.org/grpc"
-
-	"gopkg.in/yaml.v2"
-)
-
-import (
 	"dubbo.apache.org/dubbo-go/v3/common"
 	"dubbo.apache.org/dubbo-go/v3/common/constant"
 	"dubbo.apache.org/dubbo-go/v3/common/logger"
 	"dubbo.apache.org/dubbo-go/v3/config"
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
+	"github.com/opentracing/opentracing-go"
+	"google.golang.org/grpc"
+	"gopkg.in/yaml.v2"
 )
 
 var clientConf *ClientConfig
@@ -52,7 +46,7 @@ type Client struct {
 
 // NewClient creates a new gRPC client.
 func NewClient(url *common.URL) (*Client, error) {
-	clientConfInitOnce.Do(clientInit)
+	clientConfInitOnce.Do(initClient)
 
 	// If global trace instance was set, it means trace function enabled.
 	// If not, will return NoopTracer.
@@ -93,7 +87,7 @@ func NewClient(url *common.URL) (*Client, error) {
 	}, nil
 }
 
-func clientInit() {
+func initClient() {
 	// load rootConfig from runtime
 	rootConfig := config.GetRootConfig()
 
@@ -118,20 +112,21 @@ func clientInit() {
 
 	if protocolConf == nil {
 		logger.Info("protocol_conf default use dubbo config")
-	} else {
-		grpcConf := protocolConf[GRPC]
-		if grpcConf == nil {
-			logger.Warnf("grpcConf is nil")
-			return
-		}
-		grpcConfByte, err := yaml.Marshal(grpcConf)
-		if err != nil {
-			panic(err)
-		}
-		err = yaml.Unmarshal(grpcConfByte, clientConf)
-		if err != nil {
-			panic(err)
-		}
+		return
+	}
+
+	grpcConf := protocolConf[GRPC]
+	if grpcConf == nil {
+		logger.Warnf("grpcConf is nil")
+		return
+	}
+	grpcConfByte, err := yaml.Marshal(grpcConf)
+	if err != nil {
+		panic(err)
+	}
+	err = yaml.Unmarshal(grpcConfByte, clientConf)
+	if err != nil {
+		panic(err)
 	}
 }
 
