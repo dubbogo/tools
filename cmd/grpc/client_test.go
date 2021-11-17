@@ -24,9 +24,13 @@ import (
 
 import (
 	"dubbo.apache.org/dubbo-go/v3/common"
+
+	"github.com/stretchr/testify/assert"
+)
+
+import (
 	"github.com/dubbogo/tools/cmd/grpc/internal/helloworld"
 	"github.com/dubbogo/tools/cmd/grpc/internal/routeguide"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestUnaryClient(t *testing.T) {

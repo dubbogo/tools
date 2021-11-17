@@ -1,8 +1,11 @@
 package main
 
 import (
-	"github.com/magiconair/properties/assert"
 	"testing"
+)
+
+import (
+	"github.com/magiconair/properties/assert"
 )
 
 func TestMergeImports(t *testing.T) {
