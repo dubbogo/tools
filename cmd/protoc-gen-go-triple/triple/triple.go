@@ -464,10 +464,11 @@ invAttachment[k] = v
 
 		g.P("info := &", grpcPackage.Ident("UnaryServerInfo"), "{")
 		g.P("Server: srv,")
-		g.P("FullMethod: ", strconv.Quote(fmt.Sprintf("/%s/%s", service.Desc.FullName(), method.Desc.Name())), ",")
+		g.P(`FullMethod: ctx.Value("XXX_TRIPLE_GO_INTERFACE_NAME").(string),`)
 		g.P("}")
 		g.P("handler := func(ctx ", contextPackage.Ident("Context"), ", req interface{}) (interface{}, error) {")
-		g.P("return srv.(", service.GoName, "Server).", method.GoName, "(ctx, req.(*", method.Input.GoIdent, "))")
+		g.P("result := base.XXX_GetProxyImpl().Invoke(ctx, invo)")
+		g.P("return result, result.Error()")
 		g.P("}")
 		g.P("return interceptor(ctx, in, info, handler)")
 		g.P("}")
