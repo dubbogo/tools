@@ -64,7 +64,7 @@ func init() {
 func main() {
 	flag.Parse()
 	var err error
-	projectName, err = getProjectName("E:\\code\\go\\tools\\cmd\\imports-formatter\\test-files")
+	projectName, err = getProjectName(projectRootPath)
 	if err != nil {
 		panic(err)
 		return
@@ -76,7 +76,7 @@ func main() {
 		return
 	}
 
-	err = reformatImports("E:\\code\\go\\tools\\cmd\\imports-formatter\\test-files")
+	err = reformatImports(projectRootPath)
 	if err != nil {
 		panic(err)
 		return
