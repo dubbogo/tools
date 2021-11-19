@@ -1,15 +1,10 @@
 package test_files
 
 // 测试外部注释
-
 import (
-	_ "os"
-	/*
-		测试多行注释
-	*/
+	_ "github.com/pkg/errors"
 	_ "io"
-	// 测试单行注释
 	_ "io/ioutil"
+	_ "os"
 )
-
 // 测试中间注释
