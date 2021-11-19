@@ -18,10 +18,13 @@ import (
 )
 
 import (
-	"github.com/dubbogo/tools/cmd/protoc-gen-go-triple/triple"
-
 	"google.golang.org/protobuf/compiler/protogen"
+
 	"google.golang.org/protobuf/types/pluginpb"
+)
+
+import (
+	"github.com/dubbogo/tools/cmd/protoc-gen-go-triple/triple"
 )
 
 func main() {

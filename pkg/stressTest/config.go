@@ -1,6 +1,8 @@
 package stressTest
 
-import "time"
+import (
+	"time"
+)
 
 type StressTestConfig struct {
 	parallel int

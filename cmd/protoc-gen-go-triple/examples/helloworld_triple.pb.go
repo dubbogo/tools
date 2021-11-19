@@ -8,12 +8,17 @@ package examples
 
 import (
 	context "context"
+)
+
+import (
 	protocol "dubbo.apache.org/dubbo-go/v3/protocol"
 	dubbo3 "dubbo.apache.org/dubbo-go/v3/protocol/dubbo3"
 	invocation "dubbo.apache.org/dubbo-go/v3/protocol/invocation"
+
 	common "github.com/dubbogo/triple/pkg/common"
 	constant "github.com/dubbogo/triple/pkg/common/constant"
 	triple "github.com/dubbogo/triple/pkg/triple"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
