@@ -32,7 +32,7 @@ import (
 var RequireUnimplemented *bool
 
 const (
-	Version           = "1.0.2"
+	Version           = "1.0.5"
 	contextPackage    = protogen.GoImportPath("context")
 	grpcPackage       = protogen.GoImportPath("github.com/dubbogo/grpc-go")
 	codesPackage      = protogen.GoImportPath("github.com/dubbogo/grpc-go/codes")
