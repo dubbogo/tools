@@ -147,6 +147,11 @@ func generateTripleService(gen *protogen.Plugin, file *protogen.File, g *protoge
 	g.P("}")
 	g.P()
 
+	g.P("func (c *", dubboSrvName, ") ", " XXX_InterfaceName() string{")
+	g.P(`return `, strconv.Quote(string(service.Desc.FullName())), ``)
+	g.P("}")
+	g.P()
+
 	// NewClient factory.
 	if service.Desc.Options().(*descriptorpb.ServiceOptions).GetDeprecated() {
 		g.P(deprecationComment)
@@ -238,6 +243,11 @@ func generateTripleService(gen *protogen.Plugin, file *protogen.File, g *protoge
 	g.P("func (s *Unimplemented", serverType, ") XXX_ServiceDesc() *grpc_go.ServiceDesc {")
 	g.P(`return &`, serviceDescVar)
 	g.P(`}`)
+
+	g.P("func (s *Unimplemented", serverType, ") XXX_InterfaceName() string{")
+	g.P(`return `, strconv.Quote(string(service.Desc.FullName())), ``)
+	g.P("}")
+	g.P()
 
 	if *RequireUnimplemented {
 		g.P("func (Unimplemented", serverType, ") mustEmbedUnimplemented", serverType, "() {}")
