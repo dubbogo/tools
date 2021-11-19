@@ -49,7 +49,7 @@ var (
 	projectName       string
 	goPkgMap          = make(map[string]struct{})
 	outerComments     = make([]string, 0)
-	// 记录 importBlocks 和 endBlocks 之间的注释
+	// record comments between importBlocks and endBlocks
 	innerComments = make([]string, 0)
 )
 
@@ -186,7 +186,7 @@ func doReformat(filePath string) error {
 	endImport := false
 	output := make([]byte, 0)
 
-	// processed import(orgnazation) -> orignal import packages
+	// processed import(organization) -> original import packages
 	rootImports := make(map[string][]string)
 	internalImports := make(map[string][]string)
 	thirdImports := make(map[string][]string)
@@ -293,7 +293,21 @@ func doReformat(filePath string) error {
 			if _, ok := goPkgMap[importKey]; ok {
 				// go root import block
 				cacheImports(rootImports, importKey, []string{orgImportPkg})
-			} else if strings.HasPrefix(importKey, projectName) {
+			} else if importKey == projectName || (strings.HasPrefix(importKey, projectName) && len(importKey) > len(projectName) && importKey[len(projectName)] == '/') {
+				/**
+				for project a
+				****************************
+				import (
+					a
+					a/b
+					aa
+				)
+				****************************
+				we need to combine a&a/b, and exclude aa.
+				importKey == projectName is for a
+				strings.HasPrefix(importKey, projectName) && len(importKey) > len(projectName) && importKey[len(projectName)] == '/' is for a/b
+				if we simply use strings.HasPrefix(importKey, projectName), it will recognize a&aa as the same project.
+				*/
 				// internal imports of the project
 				cacheImports(internalImports, importKey, []string{orgImportPkg})
 			} else {
