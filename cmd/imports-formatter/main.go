@@ -42,6 +42,7 @@ const (
 
 var (
 	blankLine         bool
+	newline           bool
 	currentWorkDir, _ = os.Getwd()
 	goRoot            = os.Getenv(GO_ROOT) + "/src"
 	endBlocks         = []string{"var", "const", "type", "func"}
@@ -51,6 +52,7 @@ var (
 	outerComments     = make([]string, 0)
 	// record comments between importBlocks and endBlocks
 	innerComments = make([]string, 0)
+	ignorePath    = []string{".git", ".idea", ".github", ".vscode"}
 )
 
 func init() {
@@ -62,7 +64,7 @@ func init() {
 func main() {
 	flag.Parse()
 	var err error
-	projectName, err = getProjectName(projectRootPath)
+	projectName, err = getProjectName("E:\\code\\go\\tools\\cmd\\imports-formatter\\test-files")
 	if err != nil {
 		panic(err)
 		return
@@ -74,7 +76,7 @@ func main() {
 		return
 	}
 
-	err = reformatImports(projectRootPath)
+	err = reformatImports("E:\\code\\go\\tools\\cmd\\imports-formatter\\test-files")
 	if err != nil {
 		panic(err)
 		return
@@ -148,7 +150,7 @@ func reformatImports(path string) error {
 
 	dirs := make([]os.FileInfo, 0)
 	for _, fileInfo := range fileInfos {
-		if fileInfo.IsDir() {
+		if fileInfo.IsDir() && !ignore(fileInfo.Name()) {
 			dirs = append(dirs, fileInfo)
 		} else if strings.HasSuffix(fileInfo.Name(), GO_FILE_SUFFIX) {
 			clearData()
@@ -209,12 +211,15 @@ func doReformat(filePath string) error {
 
 		if endImport {
 			output = append(output, line...)
-			output = append(output, []byte("\n")...)
+			if newline {
+				output = append(output, []byte("\n")...)
+			}
 			continue
 		}
 
 		// if import blocks end
 		for _, block := range endBlocks {
+			newline = true
 			if strings.HasPrefix(string(line), block) {
 				endImport = true
 				beginImports = false
@@ -466,4 +471,13 @@ func doRefreshImports(content []byte, imports []string) []byte {
 func clearData() {
 	innerComments = innerComments[:0]
 	outerComments = outerComments[:0]
+}
+
+func ignore(path string) bool {
+	for _, name := range ignorePath {
+		if name == path {
+			return true
+		}
+	}
+	return false
 }
