@@ -42,7 +42,6 @@ const (
 
 var (
 	blankLine         bool
-	newline           bool
 	currentWorkDir, _ = os.Getwd()
 	goRoot            = os.Getenv(GO_ROOT) + "/src"
 	endBlocks         = []string{"var", "const", "type", "func"}
@@ -211,15 +210,12 @@ func doReformat(filePath string) error {
 
 		if endImport {
 			output = append(output, line...)
-			if newline {
-				output = append(output, []byte("\n")...)
-			}
+			output = append(output, []byte("\n")...)
 			continue
 		}
 
 		// if import blocks end
 		for _, block := range endBlocks {
-			newline = true
 			if strings.HasPrefix(string(line), block) {
 				endImport = true
 				beginImports = false
