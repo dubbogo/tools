@@ -52,6 +52,8 @@ var (
 	// record comments between importBlocks and endBlocks
 	innerComments = make([]string, 0)
 	ignorePath    = []string{".git", ".idea", ".github", ".vscode"}
+	newLine       = false
+	blockCount    = 0
 )
 
 func init() {
@@ -63,7 +65,8 @@ func init() {
 func main() {
 	flag.Parse()
 	var err error
-	projectName, err = getProjectName(projectRootPath)
+	//projectName, err = getProjectName(projectRootPath)
+	projectName, err = getProjectName("E:\\code\\go\\dubbo-go")
 	if err != nil {
 		panic(err)
 		return
@@ -75,7 +78,8 @@ func main() {
 		return
 	}
 
-	err = reformatImports(projectRootPath)
+	//err = reformatImports(projectRootPath)
+	err = reformatImports("E:\\code\\go\\dubbo-go")
 	if err != nil {
 		panic(err)
 		return
@@ -203,6 +207,16 @@ func doReformat(filePath string) error {
 		line, _, err := reader.ReadLine()
 		if err != nil {
 			if err == io.EOF {
+				root := len(rootImports)
+				internal := len(internalImports)
+				third := len(thirdImports)
+				if root > 0 && internal > 0 && third > 0 {
+					blockCount = 3
+				} else if (root > 0 && internal > 0) || (root > 0 && third > 0) || (internal > 0 && third > 0) {
+					blockCount = 2
+				} else if root > 0 || internal > 0 || third > 0 {
+					blockCount = 1
+				}
 				break
 			}
 			return errors.New("read line of " + filePath + " encounter error:" + err.Error())
@@ -219,6 +233,7 @@ func doReformat(filePath string) error {
 			if strings.HasPrefix(string(line), block) {
 				endImport = true
 				beginImports = false
+				newLine = true
 				output = refreshImports(output, mergeImports(rootImports), false)
 				output = refreshImports(output, mergeImports(thirdImports), blankLine)
 				output = refreshImports(output, mergeImports(internalImports), false)
@@ -432,7 +447,7 @@ func refreshImports(content []byte, importsMap map[string][]string, blankLine bo
 	if len(importsMap) <= 0 {
 		return content
 	}
-
+	blockCount--
 	content = append(content, []byte("import (\n")...)
 	sortedKeys := make([]string, 0, len(importsMap))
 	for key := range importsMap {
@@ -447,8 +462,11 @@ func refreshImports(content []byte, importsMap map[string][]string, blankLine bo
 			content = append(content, []byte("\n")...)
 		}
 	}
-
-	content = append(content, []byte(")\n\n")...)
+	if !newLine && blockCount == 0 && len(innerComments) <= 0 {
+		content = append(content, []byte(")")...)
+	} else {
+		content = append(content, []byte(")\n\n")...)
+	}
 	return content
 }
 
