@@ -65,8 +65,7 @@ func init() {
 func main() {
 	flag.Parse()
 	var err error
-	//projectName, err = getProjectName(projectRootPath)
-	projectName, err = getProjectName("E:\\code\\go\\dubbo-go")
+	projectName, err = getProjectName(projectRootPath)
 	if err != nil {
 		panic(err)
 		return
@@ -78,8 +77,7 @@ func main() {
 		return
 	}
 
-	//err = reformatImports(projectRootPath)
-	err = reformatImports("E:\\code\\go\\dubbo-go")
+	err = reformatImports(projectRootPath)
 	if err != nil {
 		panic(err)
 		return
@@ -157,6 +155,7 @@ func reformatImports(path string) error {
 			dirs = append(dirs, fileInfo)
 		} else if strings.HasSuffix(fileInfo.Name(), GO_FILE_SUFFIX) {
 			clearData()
+			newLine = false
 			err = doReformat(path + PATH_SEPARATOR + fileInfo.Name())
 			if err != nil {
 				return errors.WithStack(err)
@@ -463,7 +462,7 @@ func refreshImports(content []byte, importsMap map[string][]string, blankLine bo
 		}
 	}
 	if !newLine && blockCount == 0 && len(innerComments) <= 0 {
-		content = append(content, []byte(")")...)
+		content = append(content, []byte(")\n")...)
 	} else {
 		content = append(content, []byte(")\n\n")...)
 	}
