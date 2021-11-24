@@ -25,9 +25,7 @@ import (
 	"os"
 	"sort"
 	"strings"
-)
 
-import (
 	"github.com/pkg/errors"
 )
 
@@ -66,19 +64,16 @@ func main() {
 	projectName, err = getProjectName(projectRootPath)
 	if err != nil {
 		panic(err)
-		return
 	}
 
 	err = preProcess(goRoot, goPkgMap)
 	if err != nil {
 		panic(err)
-		return
 	}
 
 	err = reformatImports(projectRootPath)
 	if err != nil {
 		panic(err)
-		return
 	}
 }
 
