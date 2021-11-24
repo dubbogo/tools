@@ -20,12 +20,14 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
 
+	"github.com/dubbogo/tools/constant"
 	"github.com/pkg/errors"
 )
 
@@ -61,6 +63,7 @@ func init() {
 }
 
 func main() {
+	fmt.Println("imports-formatter:", constant.Version)
 	flag.Parse()
 	var err error
 	projectName, err = getProjectName(projectRootPath)
