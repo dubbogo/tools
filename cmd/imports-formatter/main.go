@@ -50,9 +50,8 @@ var (
 	goPkgMap          = make(map[string]struct{})
 	outerComments     = make([]string, 0)
 	// record comments between importBlocks and endBlocks
-	innerComments       = make([]string, 0)
-	ignorePath          = []string{".git", ".idea", ".github", ".vscode"}
-	ignoreDirectoryPath = []string{"vendor", "swagger", "docs"}
+	innerComments = make([]string, 0)
+	ignorePath    = []string{".git", ".idea", ".github", ".vscode", "vendor", "swagger", "docs"}
 )
 
 func init() {
@@ -150,7 +149,7 @@ func reformatImports(path string) error {
 
 	dirs := make([]os.FileInfo, 0)
 	for _, fileInfo := range fileInfos {
-		if fileInfo.IsDir() && !ignore(fileInfo.Name()) && !ignoreDirectory(fileInfo.Name()) {
+		if fileInfo.IsDir() && !ignore(fileInfo.Name()) {
 			dirs = append(dirs, fileInfo)
 		} else if strings.HasSuffix(fileInfo.Name(), GO_FILE_SUFFIX) {
 			clearData()
@@ -472,15 +471,6 @@ func clearData() {
 
 func ignore(path string) bool {
 	for _, name := range ignorePath {
-		if name == path {
-			return true
-		}
-	}
-	return false
-}
-
-func ignoreDirectory(path string) bool {
-	for _, name := range ignoreDirectoryPath {
 		if name == path {
 			return true
 		}
