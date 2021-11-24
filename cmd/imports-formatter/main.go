@@ -20,14 +20,14 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
-)
 
-import (
+	"github.com/dubbogo/tools/constant"
 	"github.com/pkg/errors"
 )
 
@@ -52,6 +52,8 @@ var (
 	// record comments between importBlocks and endBlocks
 	innerComments = make([]string, 0)
 	ignorePath    = []string{".git", ".idea", ".github", ".vscode", "vendor", "swagger", "docs"}
+	newLine       = false
+	blockCount    = 0
 )
 
 func init() {
@@ -61,24 +63,22 @@ func init() {
 }
 
 func main() {
+	fmt.Println("imports-formatter:", constant.Version)
 	flag.Parse()
 	var err error
 	projectName, err = getProjectName(projectRootPath)
 	if err != nil {
 		panic(err)
-		return
 	}
 
 	err = preProcess(goRoot, goPkgMap)
 	if err != nil {
 		panic(err)
-		return
 	}
 
 	err = reformatImports(projectRootPath)
 	if err != nil {
 		panic(err)
-		return
 	}
 }
 
@@ -153,6 +153,7 @@ func reformatImports(path string) error {
 			dirs = append(dirs, fileInfo)
 		} else if strings.HasSuffix(fileInfo.Name(), GO_FILE_SUFFIX) {
 			clearData()
+			newLine = false
 			err = doReformat(path + PATH_SEPARATOR + fileInfo.Name())
 			if err != nil {
 				return errors.WithStack(err)
@@ -203,6 +204,16 @@ func doReformat(filePath string) error {
 		line, _, err := reader.ReadLine()
 		if err != nil {
 			if err == io.EOF {
+				root := len(rootImports)
+				internal := len(internalImports)
+				third := len(thirdImports)
+				if root > 0 && internal > 0 && third > 0 {
+					blockCount = 3
+				} else if (root > 0 && internal > 0) || (root > 0 && third > 0) || (internal > 0 && third > 0) {
+					blockCount = 2
+				} else if root > 0 || internal > 0 || third > 0 {
+					blockCount = 1
+				}
 				break
 			}
 			return errors.New("read line of " + filePath + " encounter error:" + err.Error())
@@ -219,6 +230,7 @@ func doReformat(filePath string) error {
 			if strings.HasPrefix(string(line), block) {
 				endImport = true
 				beginImports = false
+				newLine = true
 				output = refreshImports(output, mergeImports(rootImports), false)
 				output = refreshImports(output, mergeImports(thirdImports), blankLine)
 				output = refreshImports(output, mergeImports(internalImports), false)
@@ -432,7 +444,7 @@ func refreshImports(content []byte, importsMap map[string][]string, blankLine bo
 	if len(importsMap) <= 0 {
 		return content
 	}
-
+	blockCount--
 	content = append(content, []byte("import (\n")...)
 	sortedKeys := make([]string, 0, len(importsMap))
 	for key := range importsMap {
@@ -447,8 +459,11 @@ func refreshImports(content []byte, importsMap map[string][]string, blankLine bo
 			content = append(content, []byte("\n")...)
 		}
 	}
-
-	content = append(content, []byte(")\n\n")...)
+	if !newLine && blockCount == 0 && len(innerComments) <= 0 {
+		content = append(content, []byte(")\n")...)
+	} else {
+		content = append(content, []byte(")\n\n")...)
+	}
 	return content
 }
 
