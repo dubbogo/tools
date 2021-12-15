@@ -40,6 +40,7 @@ func (s *StressTester) Test() {
 
 				}
 			}()
+			continue
 		}
 		go func() {
 			for {
