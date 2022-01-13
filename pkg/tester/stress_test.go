@@ -17,7 +17,7 @@ func TestStressTester(t *testing.T) {
 		tester.
 			SetVerbose(true).
 			SetTPS(10).
-			SetDuration(10 * time.Second).
+			SetDuration("10s").
 			SetUserNum(2).
 			SetTestFn(testFn).
 			Run()

@@ -38,6 +38,7 @@ func (t *StressTester) Run() {
 	defer func() {
 		now := time.Now()
 		t.endedTime = &now
+		t.log("The stress tester finished, %d requests are sent", t.GetTransactionNum())
 	}()
 
 	if t.startedTime != nil || t.transactionNum != nil || t.endedTime != nil {
@@ -137,6 +138,13 @@ func (t *StressTester) GetAverageRTSeconds() float64 {
 	return t.rt.Load() / float64(t.transactionNum.Load())
 }
 
+func (t *StressTester) GetTransactionNum() int32 {
+	if t.transactionNum == nil {
+		return -1
+	}
+	return t.transactionNum.Load()
+}
+
 func (t *StressTester) SetVerbose(v bool) *StressTester {
 	t.verbose = v
 	return t
@@ -147,8 +155,12 @@ func (t *StressTester) SetUserNum(n int) *StressTester {
 	return t
 }
 
-func (t *StressTester) SetDuration(d time.Duration) *StressTester {
-	t.duration = d
+func (t *StressTester) SetDuration(d string) *StressTester {
+	duration, err := time.ParseDuration(d)
+	if err != nil {
+		panic(nil)
+	}
+	t.duration = duration
 	return t
 }
 
