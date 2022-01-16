@@ -21,14 +21,17 @@ import (
 	"log"
 )
 
+// MetaData meta data from registration center
 type MetaData interface {
 	ShowChildren() (map[string][]string, error)
 }
 
+// Factory metaData factory function
 type Factory func(name string, zkAddrs []string) MetaData
 
 var factMap = make(map[string]Factory)
 
+// Register a factory into factMap
 func Register(name string, fact Factory) {
 	if _, ok := factMap[name]; ok {
 		log.Printf("duplicate name: %s", name)
@@ -36,6 +39,7 @@ func Register(name string, fact Factory) {
 	factMap[name] = fact
 }
 
+// GetFactory get a factory function from factMap
 func GetFactory(name string) (fact Factory, ok bool) {
 	fact, ok = factMap[name]
 	return

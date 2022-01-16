@@ -33,11 +33,7 @@ import (
 )
 
 func init() {
-	metadata.Register("zookeeper", NewZk)
-}
-
-func NewZk(name string, zkAddrs []string) metadata.MetaData {
-	return NewZookeeperMetadataReport(name, zkAddrs)
+	metadata.Register("zookeeper", NewZookeeperMetadataReport)
 }
 
 // ZookeeperMetadataReport is the implementation of
@@ -47,7 +43,8 @@ type ZookeeperMetadataReport struct {
 	rootDir string
 }
 
-func NewZookeeperMetadataReport(name string, zkAddrs []string) *ZookeeperMetadataReport {
+// NewZookeeperMetadataReport create a zookeeper metadata reporter
+func NewZookeeperMetadataReport(name string, zkAddrs []string) metadata.MetaData {
 	client, err := gxzookeeper.NewZookeeperClient(
 		name,
 		zkAddrs,
@@ -62,6 +59,7 @@ func NewZookeeperMetadataReport(name string, zkAddrs []string) *ZookeeperMetadat
 	}
 }
 
+// GetChildren get children node
 func (z *ZookeeperMetadataReport) GetChildren(path string) ([]string, error) {
 	delimiter := "/"
 	if path == "" {
@@ -70,6 +68,7 @@ func (z *ZookeeperMetadataReport) GetChildren(path string) ([]string, error) {
 	return z.client.GetChildren(z.rootDir + delimiter + path)
 }
 
+// ShowChildren shou children list
 func (z *ZookeeperMetadataReport) ShowChildren() (map[string][]string, error) {
 	methodsMap := map[string][]string{}
 	inters, err := z.GetChildren("")
