@@ -36,3 +36,13 @@ interface: org.apache.dubbo.gate.basketballService
 methods: []
 
 ```
+
+### 创建 demo
+
+```bash
+./dubbogo-cli-v2 new --path=./demo
+```
+
+该命令会生成一个 dubbo-go 的样例，该样例可以参考 [HOWTO](https://github.com/apache/dubbo-go-samples/blob/master/HOWTO.md) 运行:
+
+![img.png](docs/demo/img.png)

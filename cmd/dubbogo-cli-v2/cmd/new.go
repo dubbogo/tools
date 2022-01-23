@@ -18,53 +18,31 @@
 package cmd
 
 import (
-	"fmt"
-	"log"
-)
-
-import (
 	"github.com/spf13/cobra"
 )
 
 import (
-	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/metadata"
-	_ "github.com/dubbogo/tools/cmd/dubbogo-cli-v2/metadata/zookeeper"
+	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/generator/sample"
 )
 
-// showCmd represents the show command
-var showCmd = &cobra.Command{
-	Use:   "show",
-	Short: "show interfaces and methods",
-	Long:  ``,
-	Run:   show,
+// newCmd represents the new command
+var newCmd = &cobra.Command{
+	Use:   "new",
+	Short: "new a dubbo-go demo project",
+	Run:   createDemo,
 }
 
 func init() {
-	rootCmd.AddCommand(showCmd)
-	showCmd.Flags().String("r", "r", "")
-	showCmd.Flags().String("h", "h", "")
+	rootCmd.AddCommand(newCmd)
+	newCmd.Flags().String("path", "rootPath", "")
 }
 
-func show(cmd *cobra.Command, _ []string) {
-	registry, err := cmd.Flags().GetString("r")
+func createDemo(cmd *cobra.Command, _ []string) {
+	path, err := cmd.Flags().GetString("path")
 	if err != nil {
 		panic(err)
 	}
-	host, err := cmd.Flags().GetString("h")
-	if err != nil {
+	if err := sample.Generate(path); err != nil {
 		panic(err)
-	}
-	fact, ok := metadata.GetFactory(registry)
-	if !ok {
-		log.Print("registry not support")
-		return
-	}
-	methodsMap, err := fact("dubbogo-cli", []string{host}).ShowChildren()
-	if err != nil {
-		panic(err)
-	}
-	for k, v := range methodsMap {
-		fmt.Printf("interface: %s\n", k)
-		fmt.Printf("methods: %v\n", v)
 	}
 }

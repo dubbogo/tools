@@ -18,11 +18,16 @@
 package cmd
 
 import (
+	"log"
+)
+
+import (
+	"github.com/spf13/cobra"
+)
+
+import (
 	"github.com/dubbogo/tools/internal/client"
 	"github.com/dubbogo/tools/internal/json_register"
-	"log"
-
-	"github.com/spf13/cobra"
 )
 
 // callCmd represents the call command
@@ -50,22 +55,20 @@ var (
 
 func init() {
 	rootCmd.AddCommand(callCmd)
-	showCmd.Flags().String("r", "localhost", "")
-	showCmd.Flags().Int("h", 8080, "")
 
-	showCmd.Flags().StringVarP(&host, "h", "", "localhost", "target server host")
-	showCmd.Flags().IntVarP(&port, "p", "", 8080, "target server port")
-	showCmd.Flags().StringVarP(&protocolName, "proto", "", "dubbo", "transfer protocol")
-	showCmd.Flags().StringVarP(&InterfaceID, "i", "", "com", "target service registered interface")
-	showCmd.Flags().StringVarP(&version, "v", "", "", "target service version")
-	showCmd.Flags().StringVarP(&group, "g", "", "", "target service group")
-	showCmd.Flags().StringVarP(&method, "method", "", "", "target method")
-	showCmd.Flags().StringVarP(&sendObjFilePath, "sendObj", "", "", "json file path to define transfer struct")
-	showCmd.Flags().StringVarP(&recvObjFilePath, "recvObj", "", "", "json file path to define receive struct")
-	showCmd.Flags().IntVarP(&timeout, "timeout", "", 3000, "request timeout (ms)")
+	callCmd.Flags().StringVarP(&host, "h", "", "localhost", "target server host")
+	callCmd.Flags().IntVarP(&port, "p", "", 8080, "target server port")
+	callCmd.Flags().StringVarP(&protocolName, "proto", "", "dubbo", "transfer protocol")
+	callCmd.Flags().StringVarP(&InterfaceID, "i", "", "com", "target service registered interface")
+	callCmd.Flags().StringVarP(&version, "v", "", "", "target service version")
+	callCmd.Flags().StringVarP(&group, "g", "", "", "target service group")
+	callCmd.Flags().StringVarP(&method, "method", "", "", "target method")
+	callCmd.Flags().StringVarP(&sendObjFilePath, "sendObj", "", "", "json file path to define transfer struct")
+	callCmd.Flags().StringVarP(&recvObjFilePath, "recvObj", "", "", "json file path to define receive struct")
+	callCmd.Flags().IntVarP(&timeout, "timeout", "", 3000, "request timeout (ms)")
 }
 
-func call(cmd *cobra.Command, args []string) {
+func call(_ *cobra.Command, _ []string) {
 	checkParam()
 	reqPkg := json_register.RegisterStructFromFile(sendObjFilePath)
 	recvPkg := json_register.RegisterStructFromFile(recvObjFilePath)

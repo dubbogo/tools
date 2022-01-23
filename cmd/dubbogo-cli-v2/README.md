@@ -4,7 +4,7 @@
 
 ## How to use
 
-1. 安装
+1. Install
 ```bash
 go get -u github.com/dubbogo/tools/cmd/dubbogo-cli-v2
 ```
@@ -36,3 +36,13 @@ interface: org.apache.dubbo.gate.basketballService
 methods: []
 
 ```
+
+### Create demo
+
+```bash
+./dubbogo-cli-v2 new --path=./demo
+```
+
+This command will generate a dubbo-go example, you can refer to the example [HOWTO](https://github.com/apache/dubbo-go-samples/blob/master/HOWTO.md) to run.
+
+![img.png](docs/demo/img.png)
