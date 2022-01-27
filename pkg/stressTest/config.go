@@ -10,7 +10,7 @@ type StressTestConfig struct {
 	duration time.Duration
 }
 
-func (c *StressTestConfig) Start(f func()) {
+func (c *StressTestConfig) Start(f func() error) {
 	newTester(c, f).Test()
 }
 

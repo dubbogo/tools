@@ -8,11 +8,12 @@ import (
 
 type StressTester struct {
 	config   *StressTestConfig
-	testFunc func()
+	testFunc func() error
 }
 
 func (s *StressTester) Test() {
 	counter := 0
+	errorCounter := 0
 	taskChan := make(chan bool, s.config.tps)
 	closeChan := make(chan struct{})
 	rtList := make([]int64, 0, s.config.tps)
@@ -30,16 +31,21 @@ func (s *StressTester) Test() {
 					case <-taskChan:
 
 						startTime := time.Now()
-						s.testFunc()
+						err := s.testFunc()
 						rtList = append(rtList, int64(time.Now().Sub(startTime)))
 
 						lock.Lock()
-						counter++
+						if err != nil{
+							errorCounter++
+						}else{
+							counter++
+						}
 						lock.Unlock()
 					}
 
 				}
 			}()
+			continue
 		}
 		go func() {
 			for {
@@ -47,10 +53,14 @@ func (s *StressTester) Test() {
 				case <-closeChan:
 					return
 				case <-taskChan:
-					s.testFunc()
+					err := s.testFunc()
 
 					lock.Lock()
-					counter++
+					if err != nil{
+						errorCounter++
+					}else {
+						counter++
+					}
 					lock.Unlock()
 				}
 			}
@@ -87,9 +97,14 @@ func (s *StressTester) Test() {
 			rtList = make([]int64, 0, s.config.tps)
 		}
 		tempCounter := counter
+		tempErrorCounter := errorCounter
 		counter = 0
+		errorCounter = 0
 		lock.Unlock()
 		fmt.Println("average rt = ", avgRT, " tps = ", tempCounter)
+		if tempCounter+tempErrorCounter != 0{
+			fmt.Printf(" success rate = %f\n", (float32(tempCounter)/float32(tempCounter+tempErrorCounter)))
+		}
 
 		if time.Now().Sub(startTestTime) >= s.config.duration {
 			// close all
@@ -105,7 +120,7 @@ func (s *StressTester) Test() {
 
 }
 
-func newTester(config *StressTestConfig, testFunc func()) *StressTester {
+func newTester(config *StressTestConfig, testFunc func() error) *StressTester {
 	return &StressTester{config: config, testFunc: testFunc}
 }
 
