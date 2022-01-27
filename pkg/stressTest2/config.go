@@ -5,7 +5,6 @@ import (
 )
 
 type StressTestConfig struct {
-	parallel                int
 	tps                     int
 	duration                time.Duration
 	successRateGaugeHandler func(rate float64)
@@ -34,11 +33,6 @@ func (s *StressTestConfigBuilder) SetTPS(tps int) *StressTestConfigBuilder {
 	return s
 }
 
-func (s *StressTestConfigBuilder) SetParallel(num int) *StressTestConfigBuilder {
-	s.s.parallel = num
-	return s
-}
-
 func (s *StressTestConfigBuilder) SetSuccessRateGaugeHandler(successRateGaugeHandler func(rate float64)) *StressTestConfigBuilder {
 	s.s.successRateGaugeHandler = successRateGaugeHandler
 	return s
@@ -56,8 +50,7 @@ func (s *StressTestConfigBuilder) Build() *StressTestConfig {
 func NewStressTestConfigBuilder() *StressTestConfigBuilder {
 	return &StressTestConfigBuilder{
 		s: &StressTestConfig{
-			parallel: 1,
-			tps:      0,
+			tps: 0,
 		},
 	}
 }

@@ -33,19 +33,20 @@ import (
 var RequireUnimplemented *bool
 
 const (
-	Version           = "1.0.5"
-	contextPackage    = protogen.GoImportPath("context")
-	grpcPackage       = protogen.GoImportPath("github.com/dubbogo/grpc-go")
-	codesPackage      = protogen.GoImportPath("github.com/dubbogo/grpc-go/codes")
-	statusPackage     = protogen.GoImportPath("github.com/dubbogo/grpc-go/status")
-	metadataPackage   = protogen.GoImportPath("github.com/dubbogo/grpc-go/metadata")
-	dubbo3Package     = protogen.GoImportPath("dubbo.apache.org/dubbo-go/v3/protocol/dubbo3")
-	constantPackage   = protogen.GoImportPath("github.com/dubbogo/triple/pkg/common/constant")
-	commonPackage     = protogen.GoImportPath("github.com/dubbogo/triple/pkg/common")
-	triplePackage     = protogen.GoImportPath("github.com/dubbogo/triple/pkg/triple")
-	protocolPackage   = protogen.GoImportPath("dubbo.apache.org/dubbo-go/v3/protocol")
-	invocationPackage = protogen.GoImportPath("dubbo.apache.org/dubbo-go/v3/protocol/invocation")
-	fmtPackage        = protogen.GoImportPath("fmt")
+	Version              = "1.0.8"
+	contextPackage       = protogen.GoImportPath("context")
+	grpcPackage          = protogen.GoImportPath("github.com/dubbogo/grpc-go")
+	codesPackage         = protogen.GoImportPath("github.com/dubbogo/grpc-go/codes")
+	statusPackage        = protogen.GoImportPath("github.com/dubbogo/grpc-go/status")
+	metadataPackage      = protogen.GoImportPath("github.com/dubbogo/grpc-go/metadata")
+	dubbo3Package        = protogen.GoImportPath("dubbo.apache.org/dubbo-go/v3/protocol/dubbo3")
+	constantPackage      = protogen.GoImportPath("github.com/dubbogo/triple/pkg/common/constant")
+	dubboConstantPackage = protogen.GoImportPath("dubbo.apache.org/dubbo-go/v3/common/constant")
+	commonPackage        = protogen.GoImportPath("github.com/dubbogo/triple/pkg/common")
+	triplePackage        = protogen.GoImportPath("github.com/dubbogo/triple/pkg/triple")
+	protocolPackage      = protogen.GoImportPath("dubbo.apache.org/dubbo-go/v3/protocol")
+	invocationPackage    = protogen.GoImportPath("dubbo.apache.org/dubbo-go/v3/protocol/invocation")
+	fmtPackage           = protogen.GoImportPath("fmt")
 )
 
 // GenerateFile generates a _grpc.pb.go file containing gRPC service definitions.
@@ -491,6 +492,13 @@ invAttachment[k] = v
 
 	// triple logic
 	g.P("_, ok := srv.(", dubbo3Package.Ident("Dubbo3GrpcService"), ")")
+	g.P(`ctx := stream.Context()
+	md, _ := `, metadataPackage.Ident("FromIncomingContext"), `(ctx)
+	invAttachment := make(map[string]interface{}, len(md))
+	for k, v := range md {
+		invAttachment[k] = v
+	}
+	stream.(`, grpcPackage.Ident("CtxSetterStream"), `).SetContext(context.WithValue(ctx, `, dubboConstantPackage.Ident("AttachmentKey"), `, invAttachment))`)
 	g.P(`invo := `, invocationPackage.Ident("NewRPCInvocation"), `("`, method.GoName, `", nil, nil)`)
 	g.P("if !ok {")
 	g.P(fmtPackage.Ident("Println(invo)"))

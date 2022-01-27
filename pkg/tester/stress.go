@@ -15,19 +15,23 @@ const (
 )
 
 type TestFnType func(userId int)
+type TestFnWithErrorType func(userId int) error
 
 type StressTester struct {
 	// config
-	verbose  bool
-	userNum  int
-	duration time.Duration
-	tps      int
-	testFn   TestFnType
+	verbose           bool
+	userNum           int
+	duration          time.Duration
+	tps               int
+	testFn            TestFnType
+	testFnWithError   TestFnWithErrorType
+	enableSuccessRate bool
 
 	startedTime    *time.Time
 	endedTime      *time.Time
 	transactionNum *atomic.Int32
 	rt             *atomic.Float64
+	successRate    *atomic.Float64
 }
 
 func NewStressTester() *StressTester {
@@ -99,7 +103,14 @@ func (t *StressTester) user(ctx context.Context, wg *sync.WaitGroup, uid int) {
 			}()
 
 			remainingRequestNum.Add(1)
-			t.testFn(uid)
+			if t.enableSuccessRate {
+				err := t.testFnWithError
+				if err != nil {
+
+				}
+			} else {
+				t.testFn(uid)
+			}
 		}()
 
 		counter--
@@ -128,6 +139,10 @@ func (t *StressTester) GetElapsedTimeSeconds() float64 {
 		return time.Now().Sub(*t.startedTime).Seconds()
 	}
 	return t.endedTime.Sub(*t.startedTime).Seconds()
+}
+
+func (t *StressTester) GetSuccessRate() float64 {
+	return t.successRate.Load()
 }
 
 func (t *StressTester) GetAverageRTSeconds() float64 {
@@ -159,6 +174,16 @@ func (t *StressTester) SetTPS(tps int) *StressTester {
 
 func (t *StressTester) SetTestFn(fn TestFnType) *StressTester {
 	t.testFn = fn
+	return t
+}
+
+func (t *StressTester) EnableSuccessRate() *StressTester {
+	t.enableSuccessRate = true
+	return t
+}
+
+func (t *StressTester) SetTestFnWithError(fn TestFnWithErrorType) *StressTester {
+	t.testFnWithError = fn
 	return t
 }
 

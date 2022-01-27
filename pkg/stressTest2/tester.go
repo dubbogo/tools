@@ -1,6 +1,7 @@
 package stressTest
 
 import (
+	"dubbo.apache.org/dubbo-go/v3/common/logger"
 	"fmt"
 	"sync"
 	"time"
@@ -14,94 +15,60 @@ type StressTester struct {
 func (s *StressTester) Test() {
 	counter := 0
 	errorCounter := 0
-	taskChan := make(chan bool, s.config.tps)
-	closeChan := make(chan struct{})
 	rtList := make([]int64, 0, s.config.tps)
-	allRTList := make([]int64, 0, s.config.duration/time.Second)
 	//var rtList []int64
 	lock := sync.Mutex{}
 
-	for i := 0; i < s.config.parallel; i++ {
-		if i == 0 {
-			go func() {
-				for {
-					select {
-					case <-closeChan:
-						return
-					case <-taskChan:
-
-						startTime := time.Now()
-						err := s.testFunc()
-						rtList = append(rtList, int64(time.Now().Sub(startTime)))
-
-						lock.Lock()
-						if err != nil {
-							errorCounter++
-						} else {
-							counter++
-						}
-						lock.Unlock()
-					}
-
-				}
-			}()
-			continue
-		}
-		go func() {
-			for {
-				select {
-				case <-closeChan:
-					return
-				case <-taskChan:
+	// controller
+	startTestTime := time.Now()
+	// send first period
+	ticker := time.NewTicker(time.Second)
+	for {
+		<-ticker.C
+		for i := 0; i < s.config.tps; i++ {
+			if i == 0 {
+				go func() {
+					startTime := time.Now()
 					err := s.testFunc()
-
 					lock.Lock()
+					rtList = append(rtList, int64(time.Now().Sub(startTime)))
 					if err != nil {
 						errorCounter++
 					} else {
 						counter++
 					}
 					lock.Unlock()
+				}()
+				continue
+			}
+			go func() {
+				err := s.testFunc()
+				lock.Lock()
+				if err != nil {
+					logger.Error(err)
+					errorCounter++
+				} else {
+					counter++
 				}
-			}
-		}()
-	}
-
-	// controller
-	startTestTime := time.Now()
-	// send first period
-	for i := 0; i < s.config.tps; i++ {
-		taskChan <- true
-	}
-
-	ticker := time.NewTicker(time.Second)
-	for {
-		<-ticker.C
-
-		// empty the taskChan
-	LOOP:
-		for {
-			select {
-			case <-taskChan:
-			default:
-				break LOOP
-			}
+				lock.Unlock()
+			}()
 		}
-
 		// calculate result rt
 		lock.Lock()
-		avgRT := int64(999999)
+		avgRT := int64(9999999999)
 		if len(rtList) != 0 {
 			avgRT = average(rtList)
-			allRTList = append(allRTList, avgRT)
-			rtList = make([]int64, 0, s.config.tps)
 		}
+		// read
 		tempCounter := counter
 		tempErrorCounter := errorCounter
-		counter = 0
+
+		// set to zero
 		errorCounter = 0
+		counter = 0
+		rtList = []int64{}
 		lock.Unlock()
-		fmt.Println("average rt = ", avgRT, " tps = ", tempCounter)
+		fmt.Println("average rt = ", avgRT, " tps = ", tempCounter, "errorCount = ", tempErrorCounter)
 		if tempCounter+tempErrorCounter != 0 {
 			successRate := (float64(tempCounter) / float64(tempCounter+tempErrorCounter))
 			s.config.successRateGaugeHandler(successRate)
@@ -113,13 +80,7 @@ func (s *StressTester) Test() {
 
 		if time.Now().Sub(startTestTime) >= s.config.duration {
 			// close all
-			close(closeChan)
 			return
-		}
-
-		// send next period
-		for i := 0; i < s.config.tps; i++ {
-			taskChan <- true
 		}
 	}
 
