@@ -13,13 +13,18 @@ The tool should support dubbo protocol. It makes it easy for you to define your 
 ### 3. How to get dubbo
 `go get -u github.com/dubbogo/tools/cmd/protoc-gen-dubbo`
 
-### 4. How to get dubbo
+### 4. How to get dubbo3
 `go get -u github.com/dubbogo/tools/cmd/protoc-gen-dubbo3`
 
 ### 5. How to get imports-formatter
 `go get -u github.com/dubbogo/tools/cmd/imports-formatter`
 
-### 6. Quick start：[example](example/README.md)
+### 6. How to get hessian-registry-generator
+`go get -u github.com/dubbogo/tools/cmd/dubbogo-hessian-registry`
+
+[example](cmd/dubbogo-hessian-registry/README.md)
+
+### 7. Quick start：[example](example/README.md)
 
 # imports-formatter
 
