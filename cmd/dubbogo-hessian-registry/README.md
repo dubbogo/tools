@@ -17,7 +17,7 @@ go get -u github.com/dubbogo/tools/cmd/dubbogo-hessian-registry
 ```go
 package main
 
-//go:generate go run "github.com/dubbogo/tools/cmd/dubbogo-hessian-registry" -include pkg -error -thread 3
+//go:generate go run "github.com/dubbogo/tools/cmd/dubbogo-hessian-registry" -include pkg
 func main() {
 
 }
@@ -52,6 +52,14 @@ func (*Demo1) JavaClassName() string {
 
 ```shell
 go generate
+```
+
+### Console logs
+```shell
+2022/01/28 11:58:11 === Generate start [pkg\demo.go] ===
+2022/01/28 11:58:11 === Registry POJO [pkg\demo.go].Demo0 ===
+2022/01/28 11:58:11 === Registry POJO [pkg\demo.go].Demo1 ===
+2022/01/28 11:58:11 === Generate completed [pkg\demo.go] ===
 ```
 
 ### Result
