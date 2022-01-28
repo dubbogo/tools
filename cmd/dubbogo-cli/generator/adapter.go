@@ -1,20 +1,46 @@
-package main
+package generator
 
 import (
-	"flag"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
-var (
-	include   = flag.String("include", "./", "hessian映射关系目录，默认为项目根目录")
-	onlyError = flag.Bool("error", false, "只输出错误信息，默认全量输出")
-	maxThread = flag.Int("thread", runtime.NumCPU()*2, "最大工作线程数，默认为CPU核数的2倍")
+import (
+	"github.com/dubbogo/tools/cmd/dubbogo-cli/common"
 )
+
+type GeneratorAdapter struct {
+	DirPath     string // 文件扫描目录
+	ThreadLimit int    // 最大工作线程数
+}
+
+func (a *GeneratorAdapter) CheckParam() bool {
+	if a.ThreadLimit < 1 {
+		a.ThreadLimit = 1
+	}
+	return true
+}
+
+func (a *GeneratorAdapter) Execute() {
+	fileList, err := listFiles(a.DirPath, targetFileSuffix)
+	if err != nil {
+		showLog(errorLog, "%v", err)
+		return
+	}
+
+	pool := NewPool(a.ThreadLimit)
+	for _, f := range fileList {
+		pool.Execute(NewGenerator(f))
+	}
+	pool.Wait()
+}
+
+func (a *GeneratorAdapter) GetMode() common.AdapterMode {
+	return common.GeneratorAdapterMode
+}
 
 type fileInfo struct {
 	path string
@@ -52,21 +78,4 @@ func listFiles(dirPath string, suffix string) (fileList []string, err error) {
 		return nil
 	})
 	return
-}
-
-//go:generate go fmt
-func main() {
-	flag.Parse()
-
-	fileList, err := listFiles(*include, targetFileSuffix)
-	if err != nil {
-		showLog(errorLog, "%v", err)
-		return
-	}
-
-	pool := NewPool(*maxThread)
-	for _, f := range fileList {
-		pool.Execute(NewGenerator(f))
-	}
-	pool.Wait()
 }

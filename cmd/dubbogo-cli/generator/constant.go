@@ -1,4 +1,4 @@
-package main
+package generator
 
 const (
 	PackageRegexp = `^package\s[a-zA-Z_][0-9a-zA-Z_]*$`
