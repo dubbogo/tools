@@ -19,12 +19,7 @@ The tool should support dubbo protocol. It makes it easy for you to define your 
 ### 5. How to get imports-formatter
 `go get -u github.com/dubbogo/tools/cmd/imports-formatter`
 
-### 6. How to get hessian-registry-generator
-`go get -u github.com/dubbogo/tools/cmd/dubbogo-hessian-registry`
-
-[example](cmd/dubbogo-hessian-registry/README.md)
-
-### 7. Quick start：[example](example/README.md)
+### 6. Quick start：[example](example/README.md)
 
 # imports-formatter
 

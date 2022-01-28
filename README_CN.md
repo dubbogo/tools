@@ -17,9 +17,4 @@
 ### 5. imports-formatter 工具获取方法
 `go get -u github.com/dubbogo/tools/cmd/imports-formatter`
 
-### 6. hessian-registry-generator 工具获取方法
-`go get -u github.com/dubbogo/tools/cmd/dubbogo-hessian-registry`
-
-[example](cmd/dubbogo-hessian-registry/README.md)
-
-### 7. 使用方法：见[example](example/README_CN.md)
+### 6. 使用方法：见[example](example/README_CN.md)

@@ -7,7 +7,7 @@ Automatic generate hessian.POJO registry statement.
 ## Install
 
 ```shell
-go get -u github.com/dubbogo/tools/cmd/dubbogo-hessian-registry
+go get -u github.com/dubbogo/tools/cmd/dubbogo-cli
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ go get -u github.com/dubbogo/tools/cmd/dubbogo-hessian-registry
 ```go
 package main
 
-//go:generate go run "github.com/dubbogo/tools/cmd/dubbogo-hessian-registry" -include pkg
+//go:generate go run "github.com/dubbogo/tools/cmd/dubbogo-cli" -generator -include pkg
 func main() {
 
 }
@@ -105,5 +105,4 @@ func init() {
 |  flag   |               description               |    default     |
 |:-------:|:---------------------------------------:|:--------------:|
 | include | Preprocess files parent directory path. |       ./       |
-| error |       Only output error message.        |     false      |
 | thread |          Worker thread limit.           | (cpu core) * 2 |
