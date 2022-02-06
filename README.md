@@ -13,7 +13,7 @@ The tool should support dubbo protocol. It makes it easy for you to define your 
 ### 3. How to get dubbo
 `go get -u github.com/dubbogo/tools/cmd/protoc-gen-dubbo`
 
-### 4. How to get dubbo
+### 4. How to get dubbo3
 `go get -u github.com/dubbogo/tools/cmd/protoc-gen-dubbo3`
 
 ### 5. How to get imports-formatter
