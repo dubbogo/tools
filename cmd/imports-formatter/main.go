@@ -51,7 +51,7 @@ var (
 	outerComments     = make([]string, 0)
 	// record comments between importBlocks and endBlocks
 	innerComments = make([]string, 0)
-	ignorePath    = []string{".git", ".idea", ".github", ".vscode"}
+	ignorePath    = []string{".git", ".idea", ".github", ".vscode", "vendor", "swagger", "docs"}
 	newLine       = false
 	blockCount    = 0
 )
