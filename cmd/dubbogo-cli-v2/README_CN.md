@@ -46,3 +46,97 @@ methods: []
 该命令会生成一个 dubbo-go 的样例，该样例可以参考 [HOWTO](https://github.com/apache/dubbo-go-samples/blob/master/HOWTO.md) 运行:
 
 ![img.png](docs/demo/img.png)
+
+### 快速添加 hessian2 注册方法
+#### main.go
+```go
+package main
+
+//go:generate go run "github.com/dubbogo/tools/cmd/dubbogo-cli-v2" hessian --include pkg
+func main() {
+
+}
+```
+#### pkg/demo.go
+
+```go
+package pkg
+
+type Demo0 struct {
+	A string `json:"a"`
+	B string `json:"b"`
+}
+
+func (*Demo0) JavaClassName() string {
+	return "org.apache.dubbo.Demo0"
+}
+
+type Demo1 struct {
+	C string `json:"c"`
+}
+
+func (*Demo1) JavaClassName() string {
+	return "org.apache.dubbo.Demo1"
+}
+
+```
+
+#### 执行 `go generate`
+
+```shell
+go generate
+```
+
+#### 日志
+```shell
+2022/01/28 11:58:11 === Generate start [pkg\demo.go] ===
+2022/01/28 11:58:11 === Registry POJO [pkg\demo.go].Demo0 ===
+2022/01/28 11:58:11 === Registry POJO [pkg\demo.go].Demo1 ===
+2022/01/28 11:58:11 === Generate completed [pkg\demo.go] ===
+```
+
+#### 结果
+
+pkg/demo.go
+
+```go
+package pkg
+
+import (
+	"github.com/apache/dubbo-go-hessian2"
+)
+
+type Demo0 struct {
+	A string `json:"a"`
+	B string `json:"b"`
+}
+
+func (*Demo0) JavaClassName() string {
+	return "org.apache.dubbo.Demo0"
+}
+
+type Demo1 struct {
+	C string `json:"c"`
+}
+
+func (*Demo1) JavaClassName() string {
+	return "org.apache.dubbo.Demo1"
+}
+
+func init() {
+
+	hessian.RegisterPOJO(&Demo0{})
+
+	hessian.RegisterPOJO(&Demo1{})
+
+}
+
+```
+
+#### 命令行参数
+
+|  flag   |               description               |    default     |
+|:-------:|:---------------------------------------:|:--------------:|
+| include | Preprocess files parent directory path. |       ./       |
+| thread |          Worker thread limit.           | (cpu core) * 2 |
+| error |        Only print error message.        |     false      |
