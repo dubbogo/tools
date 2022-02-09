@@ -1,7 +1,7 @@
 # Release Notes
 ---
 
-## 1.0.7
+## 1.0.9
 
 ### New Features
 
