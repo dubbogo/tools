@@ -22,12 +22,10 @@ import (
 )
 
 import (
-	"github.com/spf13/cobra"
-)
-
-import (
 	"github.com/dubbogo/tools/internal/client"
 	"github.com/dubbogo/tools/internal/json_register"
+
+	"github.com/spf13/cobra"
 )
 
 // callCmd represents the call command

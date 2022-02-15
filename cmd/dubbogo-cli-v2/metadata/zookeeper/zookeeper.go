@@ -25,10 +25,9 @@ import (
 
 import (
 	"dubbo.apache.org/dubbo-go/v3/common"
-	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
-)
 
-import (
+	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
+
 	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/metadata"
 )
 

@@ -2,13 +2,16 @@ package cmd
 
 import (
 	"fmt"
+)
+
+import (
 	"github.com/spf13/cobra"
 )
 
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "",
-	Run:   testInstall,
+	Run:   InstallCommand,
 }
 
 type InstallFactory interface {
@@ -59,7 +62,7 @@ func init() {
 	registerInstallFactory(&Installtripe{})
 }
 
-func testInstall(cmd *cobra.Command, args []string) {
+func InstallCommand(cmd *cobra.Command, args []string) {
 	argFilter := make(map[string]InstallFactory)
 
 	var f InstallFactory
