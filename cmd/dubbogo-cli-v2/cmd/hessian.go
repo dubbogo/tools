@@ -5,10 +5,12 @@ import (
 )
 
 import (
+	"github.com/spf13/cobra"
+)
+
+import (
 	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/generator/sample"
 	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/generator/sample/hessian"
-
-	"github.com/spf13/cobra"
 )
 
 // hessianCmd represents the hessian-register-generator command

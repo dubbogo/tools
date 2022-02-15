@@ -23,10 +23,12 @@ import (
 )
 
 import (
+	"github.com/spf13/cobra"
+)
+
+import (
 	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/metadata"
 	_ "github.com/dubbogo/tools/cmd/dubbogo-cli-v2/metadata/zookeeper"
-
-	"github.com/spf13/cobra"
 )
 
 // showCmd represents the show command

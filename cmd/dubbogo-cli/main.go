@@ -19,10 +19,13 @@ package main
 
 import (
 	"flag"
+	"runtime"
+)
+
+import (
 	"github.com/dubbogo/tools/cmd/dubbogo-cli/common"
 	"github.com/dubbogo/tools/cmd/dubbogo-cli/generator"
 	"github.com/dubbogo/tools/cmd/dubbogo-cli/telnet"
-	"runtime"
 )
 
 var (

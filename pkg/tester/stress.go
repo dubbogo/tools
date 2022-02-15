@@ -6,7 +6,9 @@ import (
 	"math"
 	"sync"
 	"time"
+)
 
+import (
 	"go.uber.org/atomic"
 )
 

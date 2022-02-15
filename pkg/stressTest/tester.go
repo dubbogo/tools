@@ -35,9 +35,9 @@ func (s *StressTester) Test() {
 						rtList = append(rtList, int64(time.Now().Sub(startTime)))
 
 						lock.Lock()
-						if err != nil{
+						if err != nil {
 							errorCounter++
-						}else{
+						} else {
 							counter++
 						}
 						lock.Unlock()
@@ -56,9 +56,9 @@ func (s *StressTester) Test() {
 					err := s.testFunc()
 
 					lock.Lock()
-					if err != nil{
+					if err != nil {
 						errorCounter++
-					}else {
+					} else {
 						counter++
 					}
 					lock.Unlock()
@@ -102,8 +102,8 @@ func (s *StressTester) Test() {
 		errorCounter = 0
 		lock.Unlock()
 		fmt.Println("average rt = ", avgRT, " tps = ", tempCounter)
-		if tempCounter+tempErrorCounter != 0{
-			fmt.Printf(" success rate = %f\n", (float32(tempCounter)/float32(tempCounter+tempErrorCounter)))
+		if tempCounter+tempErrorCounter != 0 {
+			fmt.Printf(" success rate = %f\n", (float32(tempCounter) / float32(tempCounter+tempErrorCounter)))
 		}
 
 		if time.Now().Sub(startTestTime) >= s.config.duration {

@@ -18,9 +18,11 @@
 package cmd
 
 import (
-	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/generator/sample"
-
 	"github.com/spf13/cobra"
+)
+
+import (
+	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/generator/sample"
 )
 
 // newCmd represents the new command
