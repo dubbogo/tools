@@ -26,9 +26,14 @@ import (
 	"os"
 	"sort"
 	"strings"
+)
 
-	"github.com/dubbogo/tools/constant"
+import (
 	"github.com/pkg/errors"
+)
+
+import (
+	"github.com/dubbogo/tools/constant"
 )
 
 const (
