@@ -141,3 +141,9 @@ func init() {
 | include | Preprocess files parent directory path. |       ./       |
 | thread |          Worker thread limit.           | (cpu core) * 2 |
 | error |        Only print error message.        |     false      |
+####How to import other dependencies with one click
+Enter install all on the command line to directly introduce other dependencies of the tool
+![img_3.png](img_3.png)
+Enter install tripe to introduce the tripe protocol dependency
+Enter install formatter to introduce formatter protocol dependency
+Enter install dubbo3grpc to introduce the dependency of dubbo3grpc protocol
