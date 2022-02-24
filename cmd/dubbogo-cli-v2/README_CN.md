@@ -143,7 +143,6 @@ func init() {
 
 #### 如何一键引入其他依赖
 在命令行输入 install all 可以直接引入本工具的其他依赖
-![img_2.png](img_2.png)
 输入install tripe 引入tripe协议依赖
 输入install formatter 引入formatter协议依赖
 输入install dubbo3grpc 引入dubbo3grpc协议依赖
