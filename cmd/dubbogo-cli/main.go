@@ -19,12 +19,13 @@ package main
 
 import (
 	"flag"
-	"log"
+	"runtime"
 )
 
 import (
-	"github.com/dubbogo/tools/internal/client"
-	"github.com/dubbogo/tools/internal/json_register"
+	"github.com/dubbogo/tools/cmd/dubbogo-cli/common"
+	"github.com/dubbogo/tools/cmd/dubbogo-cli/generator"
+	"github.com/dubbogo/tools/cmd/dubbogo-cli/telnet"
 )
 
 var (
@@ -38,6 +39,17 @@ var (
 	sendObjFilePath string
 	recvObjFilePath string
 	timeout         int
+
+	isRegistryGeneratorMode    bool   // 是否为生成器模式
+	registryFileDirectoryPath  string // 文件扫描目录
+	generatorWorkerThreadLimit int    // 最大工作线程数
+)
+
+var (
+	telnetAdapter    common.Adapter
+	generatorAdapter common.Adapter
+
+	adapters []common.Adapter
 )
 
 func init() {
@@ -51,30 +63,50 @@ func init() {
 	flag.StringVar(&sendObjFilePath, "sendObj", "", "json file path to define transfer struct")
 	flag.StringVar(&recvObjFilePath, "recvObj", "", "json file path to define receive struct")
 	flag.IntVar(&timeout, "timeout", 3000, "request timeout (ms)")
+
+	telnetAdapter = &telnet.TelnetAdapter{
+		Host:            host,
+		Port:            port,
+		ProtocolName:    protocolName,
+		InterfaceID:     InterfaceID,
+		Version:         version,
+		Group:           group,
+		Method:          method,
+		SendObjFilePath: sendObjFilePath,
+		RecvObjFilePath: recvObjFilePath,
+		Timeout:         timeout,
+	}
+	adapters = append(adapters, telnetAdapter)
+
+	flag.BoolVar(&isRegistryGeneratorMode, "generator", false, "switch to registry statement generator mode, default `false`")
+	flag.StringVar(&registryFileDirectoryPath, "include", "./", "file scan directory path, default `./`")
+	flag.IntVar(&generatorWorkerThreadLimit, "thread", runtime.NumCPU()*2, "worker thread limit, default (cpu core) * 2")
+
+	generatorAdapter = &generator.GeneratorAdapter{
+		DirPath:     registryFileDirectoryPath,
+		ThreadLimit: generatorWorkerThreadLimit,
+	}
+	adapters = append(adapters, generatorAdapter)
 }
 
-func checkParam() {
-	if method == "" {
-		log.Fatalln("-method value not fond")
+func chooseAdapter(mode common.AdapterMode) common.Adapter {
+	for _, adapter := range adapters {
+		if adapter.GetMode() == mode {
+			return adapter
+		}
 	}
-	if sendObjFilePath == "" {
-		log.Fatalln("-sendObj value not found")
-	}
-	if recvObjFilePath == "" {
-		log.Fatalln("-recObj value not found")
-	}
+	return telnetAdapter
 }
 
 func main() {
 	flag.Parse()
-	checkParam()
-	reqPkg := json_register.RegisterStructFromFile(sendObjFilePath)
-	recvPkg := json_register.RegisterStructFromFile(recvObjFilePath)
 
-	t, err := client.NewTelnetClient(host, port, protocolName, InterfaceID, version, group, method, reqPkg, timeout)
-	if err != nil {
-		panic(err)
+	var mode common.AdapterMode
+	if isRegistryGeneratorMode {
+		mode = common.GeneratorAdapterMode
 	}
-	t.ProcessRequests(recvPkg)
-	t.Destroy()
+	adapter := chooseAdapter(mode)
+	if adapter.CheckParam() {
+		adapter.Execute()
+	}
 }

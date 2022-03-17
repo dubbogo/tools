@@ -26,9 +26,14 @@ import (
 	"os"
 	"sort"
 	"strings"
+)
 
-	"github.com/dubbogo/tools/constant"
+import (
 	"github.com/pkg/errors"
+)
+
+import (
+	"github.com/dubbogo/tools/constant"
 )
 
 const (
@@ -51,7 +56,7 @@ var (
 	outerComments     = make([]string, 0)
 	// record comments between importBlocks and endBlocks
 	innerComments = make([]string, 0)
-	ignorePath    = []string{".git", ".idea", ".github", ".vscode"}
+	ignorePath    = []string{".git", ".idea", ".github", ".vscode", "vendor", "swagger", "docs"}
 	newLine       = false
 	blockCount    = 0
 )
