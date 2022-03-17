@@ -33,6 +33,13 @@ image:
   pullPolicy: Always
   tag: "1.0.0"
 
+container:
+  env:
+  ports:
+    - name: triple
+      containerPort: 20000
+      protocol: TCP
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
@@ -168,12 +175,10 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- with .Values.container }}
           env:
             {{- toYaml .Values.container.env | nindent 12}}
           ports:
             {{- toYaml .Values.container.ports | nindent 12 }}
-          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
