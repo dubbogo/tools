@@ -1,0 +1,370 @@
+package application
+
+const (
+	chartYaml = `apiVersion: v1
+name: dubbo-go-app
+description: dubbo-go-app
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.0.1
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "1.16.0"
+`
+	valuesYaml = `replicaCount: 1
+
+image:
+  repository: your_repo/namespace/image
+  pullPolicy: Always
+  tag: "1.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 20000
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+`
+
+	helpersTPL = `{{/*
+Expand the name of the chart.
+*/}}
+{{- define "app.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "app.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "app.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Common labels
+*/}}
+{{- define "app.labels" -}}
+helm.sh/chart: {{ include "app.chart" . }}
+{{ include "app.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels
+*/}}
+{{- define "app.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "app.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "app.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "app.fullname" .) .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
+`
+	deploymentYaml = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.fullname" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "app.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.serviceAccountName }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.container }}
+          env:
+            {{- toYaml .Values.container.env | nindent 12}}
+          ports:
+            {{- toYaml .Values.container.ports | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+`
+	serviceYaml = `apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "app.fullname" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "app.selectorLabels" . | nindent 4 }}
+
+`
+	serviceAccountYaml = `{{- if .Values.serviceAccount.create -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "app.serviceAccountName" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+`
+)
+
+const(
+	nacosEnvChartFile = `apiVersion: v1
+name: nacos
+description: nacos environment
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.0.1
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "1.16.0"
+`
+	nacosEnvValuesFile = `replicaCount: 1
+
+image:
+  repository: nacos/nacos-server
+  pullPolicy: IfNotPresent
+  tag: "2.0.1"
+
+container:
+  env:
+    - name: MODE
+      value: "standalone"
+  ports:
+    - name: http
+      containerPort: 8848
+      protocol: TCP
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8848
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+`
+)
+func init() {
+	// App chart
+	fileMap["chartYaml"] = &fileGenerator{
+		path:    "./chart/app",
+		file:    "Chart.yaml",
+		context: chartYaml,
+	}
+
+	fileMap["valuesYaml"] = &fileGenerator{
+		path:    "./chart/app",
+		file:    "values.yaml",
+		context: valuesYaml,
+	}
+
+
+	fileMap["helpersTPL"] = &fileGenerator{
+		path:    "./chart/app/templates",
+		file:    "_helpers.tpl",
+		context: helpersTPL,
+	}
+	fileMap["deploymentYaml"] = &fileGenerator{
+		path:    "./chart/app/templates",
+		file:    "deployment.yaml",
+		context: deploymentYaml,
+	}
+	fileMap["serviceYaml"] = &fileGenerator{
+		path:    "./chart/app/templates",
+		file:    "service.yaml",
+		context: serviceYaml,
+	}
+	fileMap["serviceAccountYaml"] = &fileGenerator{
+		path:    "./chart/app/templates",
+		file:    "serviceaccount.yaml",
+		context: serviceAccountYaml,
+	}
+
+
+	// Nacos env chart
+	fileMap["nacosEnvchartYaml"] = &fileGenerator{
+		path:    "./chart/nacos_env",
+		file:    "Chart.yaml",
+		context: nacosEnvChartFile,
+	}
+
+	fileMap["nacosEnvvaluesYaml"] = &fileGenerator{
+		path:    "./chart/nacos_env",
+		file:    "values.yaml",
+		context: nacosEnvValuesFile,
+	}
+
+	fileMap["nacosEnvHelpersTPL"] = &fileGenerator{
+		path:    "./chart/nacos_env/templates",
+		file:    "_helpers.tpl",
+		context: helpersTPL,
+	}
+	fileMap["nacosEnvDeploymentYaml"] = &fileGenerator{
+		path:    "./chart/nacos_env/templates",
+		file:    "deployment.yaml",
+		context: deploymentYaml,
+	}
+	fileMap["nacosEnvServiceYaml"] = &fileGenerator{
+		path:    "./chart/nacos_env/templates",
+		file:    "service.yaml",
+		context: serviceYaml,
+	}
+}
