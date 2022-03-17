@@ -69,6 +69,7 @@ securityContext: {}
 service:
   type: ClusterIP
   port: 20000
+  portName: triple
 
 nodeSelector: {}
 
@@ -204,9 +205,9 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: http
+      targetPort: {{ .Values.service.portName }}
       protocol: TCP
-      name: http
+      name: {{ .Values.service.portName }}
   selector:
     {{- include "app.selectorLabels" . | nindent 4 }}
 
@@ -298,6 +299,7 @@ securityContext: {}
 service:
   type: ClusterIP
   port: 8848
+  portName: http
 
 nodeSelector: {}
 
