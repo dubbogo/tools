@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 )
 
@@ -25,24 +26,24 @@ import (
 	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/generator/application"
 )
 
-// newAppCmd represents the new command
-var newAppCmd = &cobra.Command{
+// newApp represents the new command
+var newApp = &cobra.Command{
 	Use:   "newApp",
 	Short: "new a dubbo-go application project",
 	Run:   createApp,
 }
 
 func init() {
-	rootCmd.AddCommand(newAppCmd)
-	newAppCmd.Flags().String("path", "rootPath", "")
+	rootCmd.AddCommand(newApp)
 }
 
-func createApp(cmd *cobra.Command, _ []string) {
-	path, err := cmd.Flags().GetString("path")
-	if err != nil {
-		panic(err)
+func createApp(cmd *cobra.Command, args []string) {
+	if len(args) == 0{
+		fmt.Println("Please tell me the generate path, like '.' ")
+		return
 	}
+	path := args[0]
 	if err := application.Generate(path); err != nil {
-		panic(err)
+		fmt.Printf("generate error: %s\n", err)
 	}
 }

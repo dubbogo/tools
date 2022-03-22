@@ -19,31 +19,29 @@ package cmd
 
 import (
 	"fmt"
+)
+
+import (
 	"github.com/spf13/cobra"
 )
 
 import (
-	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/generator/sample"
+	"github.com/dubbogo/tools/cmd/dubbogo-cli-v2/constant"
+	_ "github.com/dubbogo/tools/cmd/dubbogo-cli-v2/metadata/zookeeper"
 )
 
-// newCmd represents the new command
-var newCmd = &cobra.Command{
-	Use:   "newDemo",
-	Short: "new a dubbo-go demo project",
-	Run:   createDemo,
+// versionCmd represents the version command
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "show version",
+	Long:  ``,
+	Run:   versionFunc,
 }
 
 func init() {
-	rootCmd.AddCommand(newCmd)
+	rootCmd.AddCommand(versionCmd)
 }
 
-func createDemo(cmd *cobra.Command, args []string) {
-	if len(args) == 0{
-		fmt.Println("Please tell me the generate path, like '.' ")
-		return
-	}
-	path := args[0]
-	if err := sample.Generate(path); err != nil {
-		fmt.Printf("generate error: %s\n", err)
-	}
+func versionFunc(cmd *cobra.Command, _ []string) {
+	fmt.Printf("Dubbo-go-cli Version: %s\n", constant.Version)
 }

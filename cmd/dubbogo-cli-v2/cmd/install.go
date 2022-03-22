@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os/exec"
 )
 
 import (
@@ -10,7 +13,7 @@ import (
 
 var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "",
+	Short: "Install tools of dubbo-go ecology.",
 	Run:   InstallCommand,
 }
 
@@ -85,7 +88,20 @@ func InstallCommand(cmd *cobra.Command, args []string) {
 	var k string
 	for k, f = range argFilter {
 		if f != nil {
-			fmt.Println("go", "install", f.GetPackage())
+			pkg := f.GetPackage()+"@latest"
+			fmt.Println("go", "install", pkg)
+			cmd := exec.Command("go", "install", f.GetPackage(), pkg)
+			if stdout, err := cmd.StdoutPipe(); err != nil {     //获取输出对象，可以从该对象中读取输出结果
+				log.Fatal(err)
+			}else{
+				if err := cmd.Start(); err != nil {   // 运行命令
+					log.Fatal(err)
+				}
+				if _, err := ioutil.ReadAll(stdout); err != nil { // 读取输出结果
+					log.Fatal(err)
+				}
+				stdout.Close()
+			}
 			continue
 		}
 		fmt.Println("不支持安装 " + k)

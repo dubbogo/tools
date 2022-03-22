@@ -6,7 +6,7 @@
 
 1. 安装
 ```bash
-go install github.com/dubbogo/tools/cmd/dubbogo-cli-v2
+go install github.com/dubbogo/tools/cmd/dubbogo-cli-v2@latest
 ```
 ## 主要功能
 
