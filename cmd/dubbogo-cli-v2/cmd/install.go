@@ -47,7 +47,7 @@ func (Installtriple) GetCmdName() string {
 	return "triple"
 }
 func (Installtriple) GetPackage() string {
-	return "github.com/dubbogo/tools/cmd/protoc-gen-go-triple@v1.0.10-rc1"
+	return "github.com/dubbogo/tools/cmd/protoc-gen-go-triple@v1.0.10-rc2"
 }
 
 var installFactory = make(map[string]InstallFactory)
