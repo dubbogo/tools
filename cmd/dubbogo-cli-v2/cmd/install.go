@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os/exec"
 )
 
@@ -49,7 +47,7 @@ func (Installtriple) GetCmdName() string {
 	return "triple"
 }
 func (Installtriple) GetPackage() string {
-	return "github.com/dubbogo/tools/cmd/protoc-gen-go-triple"
+	return "github.com/dubbogo/tools/cmd/protoc-gen-go-triple@v1.0.10-rc1"
 }
 
 var installFactory = make(map[string]InstallFactory)
@@ -88,19 +86,14 @@ func InstallCommand(cmd *cobra.Command, args []string) {
 	var k string
 	for k, f = range argFilter {
 		if f != nil {
-			pkg := f.GetPackage()+"@latest"
-			fmt.Println("go", "install", pkg)
-			cmd := exec.Command("go", "install", f.GetPackage(), pkg)
-			if stdout, err := cmd.StdoutPipe(); err != nil {     //获取输出对象，可以从该对象中读取输出结果
-				log.Fatal(err)
-			}else{
-				if err := cmd.Start(); err != nil {   // 运行命令
-					log.Fatal(err)
+			fmt.Println("go", "install", f.GetPackage())
+			cmd := exec.Command("go", "install", f.GetPackage())
+			if _, err := cmd.StdoutPipe(); err != nil { //获取输出对象，可以从该对象中读取输出结果
+				fmt.Println(err)
+			} else {
+				if err := cmd.Run(); err != nil { // 运行命令
+					fmt.Println(err)
 				}
-				if _, err := ioutil.ReadAll(stdout); err != nil { // 读取输出结果
-					log.Fatal(err)
-				}
-				stdout.Close()
 			}
 			continue
 		}

@@ -38,7 +38,7 @@ func init() {
 }
 
 func createDemo(cmd *cobra.Command, args []string) {
-	if len(args) == 0{
+	if len(args) == 0 {
 		fmt.Println("Please tell me the generate path, like '.' ")
 		return
 	}
