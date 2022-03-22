@@ -1,7 +1,7 @@
 package sample
 
 const (
-	apiTripeFile = `package api
+	apiTripleFile = `package api
 
 import (
 	context "context"
@@ -223,9 +223,9 @@ var Greeter_ServiceDesc = grpc_go.ServiceDesc{
 )
 
 func init() {
-	fileMap["apiTripeFile"] = &fileGenerator{
+	fileMap["apiTripleFile"] = &fileGenerator{
 		path:    "./api",
 		file:    "samples_api_triple.pb.go",
-		context: license + apiTripeFile,
+		context: license + apiTripleFile,
 	}
 }

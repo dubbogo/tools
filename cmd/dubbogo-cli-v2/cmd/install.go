@@ -39,13 +39,13 @@ func (InstallDubbo3Grpc) GetPackage() string {
 	return "github.com/dubbogo/tools/cmd/protoc-gen-dubbo3grpc"
 }
 
-type Installtripe struct {
+type Installtriple struct {
 }
 
-func (Installtripe) GetCmdName() string {
-	return "tripe"
+func (Installtriple) GetCmdName() string {
+	return "triple"
 }
-func (Installtripe) GetPackage() string {
+func (Installtriple) GetPackage() string {
 	return "github.com/dubbogo/tools/cmd/protoc-gen-go-triple"
 }
 
@@ -59,7 +59,7 @@ func init() {
 	rootCmd.AddCommand(installCmd)
 	registerInstallFactory(&InstallFormatter{})
 	registerInstallFactory(&InstallDubbo3Grpc{})
-	registerInstallFactory(&Installtripe{})
+	registerInstallFactory(&Installtriple{})
 }
 
 func InstallCommand(cmd *cobra.Command, args []string) {
@@ -85,7 +85,7 @@ func InstallCommand(cmd *cobra.Command, args []string) {
 	var k string
 	for k, f = range argFilter {
 		if f != nil {
-			fmt.Println("go", "get", f.GetPackage())
+			fmt.Println("go", "install", f.GetPackage())
 			continue
 		}
 		fmt.Println("不支持安装 " + k)

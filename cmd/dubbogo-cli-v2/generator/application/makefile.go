@@ -1,7 +1,7 @@
 package application
 
 const (
-	makefile = `IMAGE = your_repo/namespace/image
+	makefile = `IMAGE = $(your_repo)/$(namespace)/$(image_name)
 TAG = 1.0.0
 APPNAME = dubbo-go-app
 
@@ -11,6 +11,7 @@ build-amd64-app:
 build: proto-gen tidy build-amd64-app
 	cp ./conf/dubbogo.yaml ./build/dubbogo.yaml
 	docker build ./build -t ${IMAGE}:${TAG}
+	docker push ${IMAGE}:${TAG}
 	make clean
 
 buildx-publish: proto-gen tidy build-amd64-app

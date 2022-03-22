@@ -29,16 +29,37 @@ appVersion: "1.16.0"
 	valuesYaml = `replicaCount: 1
 
 image:
-  repository: your_repo/namespace/image
+  repository: $(your_repo)/$(namespace)/$(image_name)
   pullPolicy: Always
   tag: "1.0.0"
 
 container:
   env:
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+    - name: POD_NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+    - name: GRPC_XDS_EXPERIMENTAL_SECURITY_SUPPORT
+      value: "false"
   ports:
     - name: triple
       containerPort: 20000
       protocol: TCP
+  volumeMounts:
+    - mountPath: /var/run/secrets/token
+      name: istio-token
+
+volumes:
+  - name: istio-token
+    projected:
+      sources:
+        - serviceAccountToken:
+            audience: istio-ca
+            path: istio-token
 
 imagePullSecrets: []
 nameOverride: ""
@@ -182,6 +203,10 @@ spec:
             {{- toYaml .Values.container.ports | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.container.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -194,6 +219,11 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
 `
 	serviceYaml = `apiVersion: v1
 kind: Service
@@ -227,7 +257,7 @@ metadata:
 `
 )
 
-const(
+const (
 	nacosEnvChartFile = `apiVersion: v1
 name: nacos
 description: nacos environment
@@ -309,6 +339,7 @@ affinity: {}
 
 `
 )
+
 func init() {
 	// App chart
 	fileMap["chartYaml"] = &fileGenerator{
@@ -322,7 +353,6 @@ func init() {
 		file:    "values.yaml",
 		context: valuesYaml,
 	}
-
 
 	fileMap["helpersTPL"] = &fileGenerator{
 		path:    "./chart/app/templates",
@@ -344,7 +374,6 @@ func init() {
 		file:    "serviceaccount.yaml",
 		context: serviceAccountYaml,
 	}
-
 
 	// Nacos env chart
 	fileMap["nacosEnvchartYaml"] = &fileGenerator{

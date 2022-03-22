@@ -6,7 +6,7 @@
 
 1. 安装
 ```bash
-go get -u github.com/dubbogo/tools/cmd/dubbogo-cli-v2
+go install github.com/dubbogo/tools/cmd/dubbogo-cli-v2
 ```
 ## 主要功能
 
@@ -143,6 +143,6 @@ func init() {
 
 #### 如何一键引入其他依赖
 在命令行输入 install all 可以直接引入本工具的其他依赖
-输入install tripe 引入tripe协议依赖
+输入install triple 引入triple协议依赖
 输入install formatter 引入formatter协议依赖
 输入install dubbo3grpc 引入dubbo3grpc协议依赖
