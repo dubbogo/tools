@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"sync"
 	"time"
 )
 
@@ -22,7 +21,6 @@ type TestFnWithErrorType func(userId int) error
 type StressTester struct {
 	// config
 	verbose           bool
-	userNum           int
 	duration          time.Duration
 	tps               int
 	testFn            TestFnType
@@ -59,21 +57,11 @@ func (t *StressTester) Run() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), t.duration)
 	defer cancel()
-	wg := new(sync.WaitGroup)
 
-	for u := 0; u < t.userNum; u++ {
-		wg.Add(1)
-		go t.user(ctx, wg, u)
-	}
-
-	wg.Wait()
+	t.user(ctx)
 }
 
-func (t *StressTester) user(ctx context.Context, wg *sync.WaitGroup, uid int) {
-	defer func() {
-		wg.Done()
-	}()
-
+func (t *StressTester) user(ctx context.Context) {
 	counter := t.tps
 	timer := time.After(1 * time.Second)
 
@@ -83,9 +71,9 @@ func (t *StressTester) user(ctx context.Context, wg *sync.WaitGroup, uid int) {
 		select {
 		case <-ctx.Done():
 			// run out of the time, but it should do graceful shutdown
-			t.log("Run out of the time, user-%d is going to shutdown...", uid)
+			t.log("Run out of the time, stress tester is going to shutdown...")
 			for remainingRequestNum.Load() > 0 {
-				t.verboseLog("[user-%d] Waiting for all tests to be finished, recheck after 500ms...", uid)
+				t.verboseLog("Waiting for all tests to be finished, recheck after 500ms...")
 				time.Sleep(500 * time.Millisecond)
 			}
 			return
@@ -107,12 +95,12 @@ func (t *StressTester) user(ctx context.Context, wg *sync.WaitGroup, uid int) {
 
 			remainingRequestNum.Add(1)
 			if t.enableSuccessRate {
-				err := t.testFnWithError
+				err := t.testFnWithError(0)
 				if err != nil {
 
 				}
 			} else {
-				t.testFn(uid)
+				t.testFn(0)
 			}
 		}()
 
@@ -167,8 +155,10 @@ func (t *StressTester) SetVerbose(v bool) *StressTester {
 	return t
 }
 
-func (t *StressTester) SetUserNum(n int) *StressTester {
-	t.userNum = n
+// SetUserNum is depreciated for now, please use TPS instead, it will be removed from older version.
+// TODO(justxuewei): compatible with previous version
+func (t *StressTester) SetUserNum(_ int) *StressTester {
+	t.log("please note that user num is not supported for now, please use TPS instead")
 	return t
 }
 

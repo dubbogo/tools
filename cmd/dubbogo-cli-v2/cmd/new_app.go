@@ -19,6 +19,9 @@ package cmd
 
 import (
 	"fmt"
+)
+
+import (
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +41,7 @@ func init() {
 }
 
 func createApp(cmd *cobra.Command, args []string) {
-	if len(args) == 0{
+	if len(args) == 0 {
 		fmt.Println("Please tell me the generate path, like '.' ")
 		return
 	}

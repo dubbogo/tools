@@ -2,6 +2,7 @@ package tester
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 )
@@ -11,7 +12,9 @@ func TestStressTester(t *testing.T) {
 	t.Run("tps", func(t *testing.T) {
 
 		testFn := func(userId int) {
+			fmt.Printf("testFn started, userId = %d\n", userId)
 			time.Sleep(20 * time.Second)
+			fmt.Printf("testFn finished, userId = %d\n", userId)
 		}
 
 		tester := NewStressTester()
@@ -19,7 +22,6 @@ func TestStressTester(t *testing.T) {
 			SetVerbose(true).
 			SetTPS(10).
 			SetDuration("10s").
-			SetUserNum(2).
 			SetTestFn(testFn).
 			Run()
 
@@ -48,7 +50,7 @@ func TestStressTesterWithError(t *testing.T) {
 		tester.
 			SetVerbose(true).
 			SetTPS(10).
-			SetDuration(10 * time.Second).
+			SetDuration("10s").
 			SetUserNum(2).
 			SetTestFnWithError(testFnWithError).
 			EnableSuccessRate().
