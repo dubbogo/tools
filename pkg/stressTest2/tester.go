@@ -1,10 +1,13 @@
 package stressTest
 
 import (
-	"dubbo.apache.org/dubbo-go/v3/common/logger"
 	"fmt"
 	"sync"
 	"time"
+)
+
+import (
+	"dubbo.apache.org/dubbo-go/v3/common/logger"
 )
 
 type StressTester struct {

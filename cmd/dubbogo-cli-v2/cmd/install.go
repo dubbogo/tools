@@ -88,13 +88,13 @@ func InstallCommand(cmd *cobra.Command, args []string) {
 	var k string
 	for k, f = range argFilter {
 		if f != nil {
-			pkg := f.GetPackage()+"@latest"
+			pkg := f.GetPackage() + "@latest"
 			fmt.Println("go", "install", pkg)
 			cmd := exec.Command("go", "install", f.GetPackage(), pkg)
-			if stdout, err := cmd.StdoutPipe(); err != nil {     //获取输出对象，可以从该对象中读取输出结果
+			if stdout, err := cmd.StdoutPipe(); err != nil { //获取输出对象，可以从该对象中读取输出结果
 				log.Fatal(err)
-			}else{
-				if err := cmd.Start(); err != nil {   // 运行命令
+			} else {
+				if err := cmd.Start(); err != nil { // 运行命令
 					log.Fatal(err)
 				}
 				if _, err := ioutil.ReadAll(stdout); err != nil { // 读取输出结果
