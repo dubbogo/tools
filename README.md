@@ -1,4 +1,6 @@
-# dubbo-go-cli
+This repository has been deprecated, move to [tools](https://github.com/apache/dubbo-go/tree/main/tools)
+
+# [Deprecated] dubbo-go-cli
 
 ### 1. Problem we solved.
 
